@@ -138,7 +138,7 @@ button:disabled{cursor:not-allowed;opacity:1}
 <body>
 <div class="header">
   <h1>Constructor de rutina</h1>
-  <p>Prueba de flujo · entrenador</p>
+  <p>Prueba de flujo · entrenador · PILOTO v3</p>
 </div>
 
 <div class="wrap">
@@ -604,7 +604,6 @@ document.getElementById('saveStudentBtn').addEventListener('click',()=>{
 
   const newStudent={alumna_id:alumnaId,nombre,objetivo_principal:objetivo,fecha_inicio:fecha,token,activo:'TRUE'};
   students.push(newStudent);
-  writeRecentStudentCache(newStudent);
   populateStudents(token);
   loadCurrentRoutinesForStudent();
 
@@ -1765,7 +1764,7 @@ async function fetchCsvRows(url,bust){
     if(!res.ok) throw new Error('HTTP '+res.status);
     return parseCSV(await res.text());
   }catch(e){
-    console.warn('No se pudo leer CSV:',url,e);
+    console.error('No se pudo leer CSV:',url,e);
     return null;
   }
 }
@@ -1773,10 +1772,9 @@ async function fetchCsvRows(url,bust){
 (async()=>{
   const bust='&t='+Date.now();
 
-  const [exRows, routineRows, baseStudentRows, createdStudentRows, stateRows, dayRows]=await Promise.all([
+  const [exRows, routineRows, createdStudentRows, stateRows, dayRows]=await Promise.all([
     fetchCsvRows(CSV_URL,bust),
     fetchCsvRows(CURRENT_ROUTINES_CSV,bust),
-    fetchCsvRows(STUDENTS_CSV,bust),
     fetchCsvRows(NEW_STUDENTS_CSV,bust),
     fetchCsvRows(STUDENT_STATE_CSV,bust),
     fetchCsvRows(DAY_NAMES_CSV,bust)
@@ -1785,28 +1783,18 @@ async function fetchCsvRows(url,bust){
   exercises=(exRows||[]).filter(x=>x.ejercicio);
   currentRows=(routineRows||[]).filter(x=>x.token && x.dia && x.ejercicio);
 
-  const baseStudents=baseStudentRows||[];
+  // En el piloto, DB03 es la ÚNICA fuente persistente de alumnas.
+  // Esto elimina cualquier mezcla con DB00 y hace el comportamiento determinista.
   const createdStudents=(createdStudentRows||[]).map(s=>({
-    ...s,
+    alumna_id:String(s.alumna_id||'').trim(),
+    nombre:String(s.nombre||'').trim(),
+    objetivo_principal:String(s.objetivo_principal||'').trim(),
+    fecha_inicio:String(s.fecha_inicio||'').trim(),
+    token:String(s.token||'').trim(),
     activo:String(s.activo||'').trim() || 'TRUE'
-  }));
+  })).filter(s=>s.nombre && s.token);
 
-  // Respaldo local: evita que una alumna recién creada desaparezca si el CSV tarda
-  // en propagarse o alguna fuente falla temporalmente.
-  const cachedStudents=readRecentStudentsCache().map(s=>({
-    ...s,
-    activo:String(s.activo||'').trim() || 'TRUE'
-  }));
-
-  const mergedByToken=new Map();
-  [...baseStudents,...cachedStudents,...createdStudents].forEach(s=>{
-    const token=String(s.token||'').trim();
-    if(token) mergedByToken.set(token,s);
-  });
-  students=[...mergedByToken.values()];
-
-  reconcileRecentStudentsCache(createdStudents);
-
+  students=createdStudents;
   studentStates=stateRows||[];
   dayNameRows=dayRows||[];
 
@@ -1818,15 +1806,8 @@ async function fetchCsvRows(url,bust){
     renderWorkspace();
   }
 
-  const failed=[];
-  if(exRows===null) failed.push('biblioteca de ejercicios');
-  if(routineRows===null) failed.push('rutinas');
-  if(baseStudentRows===null && createdStudentRows===null) failed.push('alumnas');
-  if(stateRows===null) failed.push('estado de alumnas');
-  if(dayRows===null) failed.push('nombres de días');
-
-  if(failed.length){
-    console.warn('Fuentes no disponibles temporalmente:',failed.join(', '));
+  if(createdStudentRows===null){
+    alert('No se pudo leer la base de alumnas del piloto (DB03).');
   }
 })();
 </script>
