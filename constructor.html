@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Constructor de rutina · Prueba</title>
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--ink:#15171a;--muted:#6b7280;--line:#e5e7eb;--soft:#f9fafb}
+:root{--bg:#f5f6f8;--card:#fff;--ink:#15171a;--muted:#6b7280;--line:#E7DADF;--soft:#f9fafb}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-.header{background:#111827;color:#fff;padding:22px 18px}
+.header{background:#3A2A32;color:#fff;padding:22px 18px}
 .header h1{margin:0;font-size:22px}.header p{margin:5px 0 0;opacity:.75;font-size:14px}
 .wrap{max-width:860px;margin:28px auto;padding:0 16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.04);margin-bottom:18px}
@@ -26,14 +26,14 @@ textarea{min-height:88px;resize:vertical}
 .exercise-preview b{display:block;margin-bottom:4px}
 .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
 button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
-.primary{background:#111827;color:white}.secondary{background:#eef0f3;color:#111827}
+.primary{background:#3A2A32;color:white}.secondary{background:#eef0f3;color:#3A2A32}
 .list{display:flex;flex-direction:column;gap:10px}
 .item{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;background:white}
 .item-main{min-width:0}.item-title{font-weight:800}.item-sub{font-size:13px;color:var(--muted);margin-top:3px}
-.order{width:28px;height:28px;border-radius:50%;background:#111827;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:0 0 auto}
+.order{width:28px;height:28px;border-radius:50%;background:#3A2A32;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:0 0 auto}
 .item-left{display:flex;gap:12px;align-items:center;min-width:0}
 .item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.mini{padding:8px 10px;border-radius:8px;background:#eef0f3;color:#111827;font-size:12px}
+.mini{padding:8px 10px;border-radius:8px;background:#eef0f3;color:#3A2A32;font-size:12px}
 .mini.danger{background:#f6eeee;color:#7f1d1d}
 .mini:disabled{opacity:.4;cursor:not-allowed}
 .empty{color:var(--muted);padding:8px 0}
@@ -45,32 +45,32 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 .day-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}
 .badge{font-size:12px;background:#eef0f3;border-radius:999px;padding:5px 9px;color:#4b5563}
 .new-student-row{display:flex;justify-content:flex-end;margin-top:10px}
-.link-button{background:transparent;color:#111827;border:1px solid #cfd4dc}
+.link-button{background:transparent;color:#3A2A32;border:1px solid #cfd4dc}
 .modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
 .modal-backdrop.show{display:flex}
 .modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.25)}
 .modal-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:16px}
 .modal-head h2{margin:0}
-.icon-btn{background:#eef0f3;color:#111827;padding:8px 11px}
+.icon-btn{background:#eef0f3;color:#3A2A32;padding:8px 11px}
 .full{grid-column:1/-1}
 .created-box{margin-top:16px;padding:14px;border-radius:12px;background:#f3f4f6;display:none}
 .created-link{word-break:break-all;font-size:13px;margin:7px 0 11px}
 .management-row{display:flex;justify-content:center;margin:22px 0 0}
-.management-btn{background:#fff;color:#111827;border:1px solid #d1d5db}
+.management-btn{background:#fff;color:#3A2A32;border:1px solid #d1d5db}
 .state-actions{display:grid;gap:10px}
 .inactive-list{display:grid;gap:8px;margin:12px 0}
-.inactive-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #e5e7eb;border-radius:10px;cursor:pointer}
+.inactive-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #E7DADF;border-radius:10px;cursor:pointer}
 .inactive-item input{width:auto}
-.editing{outline:2px solid #111827;outline-offset:2px}
+.editing{outline:2px solid #3A2A32;outline-offset:2px}
 
 .block-type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.type-btn{background:#f3f4f6;color:#111827;border:1px solid #d1d5db}
-.type-btn.active{background:#111827;color:#fff;border-color:#111827}
+.type-btn{background:#f3f4f6;color:#3A2A32;border:1px solid #d1d5db}
+.type-btn.active{background:#3A2A32;color:#fff;border-color:#3A2A32}
 .builder-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 8px}
 .draft-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .draft-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fafafa}
 .block-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
-.block-card.combined{border-left:4px solid #111827}
+.block-card.combined{border-left:4px solid #3A2A32}
 .block-label{font-size:11px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;color:#6b7280;margin-bottom:6px}
 .block-exercises{display:flex;flex-direction:column;gap:4px;margin-top:7px}
 .block-exercise{font-size:13px;color:#374151}
@@ -93,7 +93,7 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 .day-card.collapsed .day-head{border-bottom:none}
 .day-list{display:flex;flex-direction:column;gap:10px}
 .routine-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border:1px solid #dfe3e8;border-radius:12px;padding:12px;background:#fff}
-.routine-row.combined{border-left:4px solid #111827}
+.routine-row.combined{border-left:4px solid #3A2A32}
 .routine-main{min-width:0;flex:1}
 .routine-title{font-weight:800;font-size:15px}
 .routine-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
@@ -133,12 +133,12 @@ button:disabled{cursor:not-allowed;opacity:1}
   .rename-grid{grid-template-columns:1fr}
 }
 
+
+/* Paleta PILOTO · rosa profesional / malva
+   Principal #8F5D72 · Oscuro #77495D · Fondo #FAF7F8 · Suave #F3EAEE */
 </style>
 </head>
 <body>
-<div id="diagBanner" style="position:sticky;top:0;z-index:99999;background:#fff3cd;border-bottom:1px solid #e2c36b;padding:8px 12px;font:700 13px system-ui;color:#5c4b00">
-DIAGNÓSTICO PILOTO D1 · cargando…
-</div>
 <div class="header">
   <h1>Constructor de rutina</h1>
   <p>Prueba de flujo · entrenador</p>
@@ -1711,68 +1711,40 @@ async function commitDay(day){
     }
   }
 }
-async function diagFetch(label,url,bust){
-  try{
-    const res=await fetch(url+bust,{cache:'no-store'});
-    const raw=await res.text();
-    return {label,ok:res.ok,status:res.status,raw,rows:parseCSV(raw),error:''};
-  }catch(e){
-    return {label,ok:false,status:0,raw:'',rows:[],error:String(e && e.message || e)};
-  }
-}
-
 (async()=>{
-  const banner=document.getElementById('diagBanner');
-  const bust='&t='+Date.now();
+  try{
+    const bust='&t='+Date.now();
+    const [exRes, currentRes, studentsRes, newStudentsRes, stateRes, dayNamesRes]=await Promise.all([
+      fetch(CSV_URL+bust,{cache:'no-store'}),
+      fetch(CURRENT_ROUTINES_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENT_STATE_CSV+bust,{cache:'no-store'}),
+      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'})
+    ]);
 
-  const results=await Promise.all([
-    diagFetch('Ejercicios',CSV_URL,bust),
-    diagFetch('Rutinas',CURRENT_ROUTINES_CSV,bust),
-    diagFetch('DB00 alumnas',STUDENTS_CSV,bust),
-    diagFetch('DB03 altas',NEW_STUDENTS_CSV,bust),
-    diagFetch('DB04 estados',STUDENT_STATE_CSV,bust),
-    diagFetch('DB05 días',DAY_NAMES_CSV,bust)
-  ]);
+    exercises=parseCSV(await exRes.text()).filter(x=>x.ejercicio);
+    currentRows=parseCSV(await currentRes.text()).filter(x=>x.token && x.dia && x.ejercicio);
+    const baseStudents=parseCSV(await studentsRes.text());
+    const createdStudents=parseCSV(await newStudentsRes.text()).map(s=>({
+      ...s,
+      activo: String(s.activo||'').trim() || 'TRUE'
+    }));
+    students=[...baseStudents,...createdStudents];
+    studentStates=parseCSV(await stateRes.text());
+    dayNameRows=parseCSV(await dayNamesRes.text());
 
-  const [ex,current,base,newS,state,days]=results;
+    populateStudents();
 
-  exercises=(ex.rows||[]).filter(x=>x.ejercicio);
-  currentRows=(current.rows||[]).filter(x=>x.token && x.dia && x.ejercicio);
-  const baseStudents=base.rows||[];
-  const createdStudents=(newS.rows||[]).map(s=>({
-    ...s,
-    activo:String(s.activo||'').trim() || 'TRUE'
-  }));
-  students=[...baseStudents,...createdStudents];
-  studentStates=state.rows||[];
-  dayNameRows=days.rows||[];
-
-  populateStudents();
-
-  const activeNames=allKnownStudents()
-    .filter(s=>s.nombre && s.token && effectiveActive(s))
-    .map(s=>s.nombre)
-    .slice(0,6);
-
-  banner.innerHTML =
-    'DIAGNÓSTICO PILOTO D1 · ' +
-    'DB03 HTTP '+newS.status+
-    ' · filas DB03: '+createdStudents.length+
-    ' · alumnas activas cargadas: '+activeNames.length+
-    (activeNames.length ? ' · '+activeNames.join(' / ') : '')+
-    (newS.error ? ' · ERROR: '+newS.error : '');
-
-  if(document.getElementById('student').value){
-    loadCurrentRoutinesForStudent();
-  }else{
+    if(document.getElementById('student').value){
+      loadCurrentRoutinesForStudent();
+    }else{
+      renderWorkspace();
+    }
+  }catch(e){
+    alert('No se pudo cargar alumnas, biblioteca o rutina vigente.');
     renderWorkspace();
   }
-
-  // Console detail in case we need a second pass.
-  console.table(results.map(r=>({
-    fuente:r.label,http:r.status,ok:r.ok,filas:r.rows.length,error:r.error
-  })));
-  console.log('DB03 encabezados/primera fila:', createdStudents[0]||null);
 })();
 </script>
 </body>
