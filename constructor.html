@@ -136,6 +136,9 @@ button:disabled{cursor:not-allowed;opacity:1}
 </style>
 </head>
 <body>
+<div id="diagBanner" style="position:sticky;top:0;z-index:99999;background:#fff3cd;border-bottom:1px solid #e2c36b;padding:8px 12px;font:700 13px system-ui;color:#5c4b00">
+DIAGNÓSTICO PILOTO D1 · cargando…
+</div>
 <div class="header">
   <h1>Constructor de rutina</h1>
   <p>Prueba de flujo · entrenador</p>
@@ -1708,40 +1711,68 @@ async function commitDay(day){
     }
   }
 }
-(async()=>{
+async function diagFetch(label,url,bust){
   try{
-    const bust='&t='+Date.now();
-    const [exRes, currentRes, studentsRes, newStudentsRes, stateRes, dayNamesRes]=await Promise.all([
-      fetch(CSV_URL+bust,{cache:'no-store'}),
-      fetch(CURRENT_ROUTINES_CSV+bust,{cache:'no-store'}),
-      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
-      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'}),
-      fetch(STUDENT_STATE_CSV+bust,{cache:'no-store'}),
-      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'})
-    ]);
-
-    exercises=parseCSV(await exRes.text()).filter(x=>x.ejercicio);
-    currentRows=parseCSV(await currentRes.text()).filter(x=>x.token && x.dia && x.ejercicio);
-    const baseStudents=parseCSV(await studentsRes.text());
-    const createdStudents=parseCSV(await newStudentsRes.text()).map(s=>({
-      ...s,
-      activo: String(s.activo||'').trim() || 'TRUE'
-    }));
-    students=[...baseStudents,...createdStudents];
-    studentStates=parseCSV(await stateRes.text());
-    dayNameRows=parseCSV(await dayNamesRes.text());
-
-    populateStudents();
-
-    if(document.getElementById('student').value){
-      loadCurrentRoutinesForStudent();
-    }else{
-      renderWorkspace();
-    }
+    const res=await fetch(url+bust,{cache:'no-store'});
+    const raw=await res.text();
+    return {label,ok:res.ok,status:res.status,raw,rows:parseCSV(raw),error:''};
   }catch(e){
-    alert('No se pudo cargar alumnas, biblioteca o rutina vigente.');
+    return {label,ok:false,status:0,raw:'',rows:[],error:String(e && e.message || e)};
+  }
+}
+
+(async()=>{
+  const banner=document.getElementById('diagBanner');
+  const bust='&t='+Date.now();
+
+  const results=await Promise.all([
+    diagFetch('Ejercicios',CSV_URL,bust),
+    diagFetch('Rutinas',CURRENT_ROUTINES_CSV,bust),
+    diagFetch('DB00 alumnas',STUDENTS_CSV,bust),
+    diagFetch('DB03 altas',NEW_STUDENTS_CSV,bust),
+    diagFetch('DB04 estados',STUDENT_STATE_CSV,bust),
+    diagFetch('DB05 días',DAY_NAMES_CSV,bust)
+  ]);
+
+  const [ex,current,base,newS,state,days]=results;
+
+  exercises=(ex.rows||[]).filter(x=>x.ejercicio);
+  currentRows=(current.rows||[]).filter(x=>x.token && x.dia && x.ejercicio);
+  const baseStudents=base.rows||[];
+  const createdStudents=(newS.rows||[]).map(s=>({
+    ...s,
+    activo:String(s.activo||'').trim() || 'TRUE'
+  }));
+  students=[...baseStudents,...createdStudents];
+  studentStates=state.rows||[];
+  dayNameRows=days.rows||[];
+
+  populateStudents();
+
+  const activeNames=allKnownStudents()
+    .filter(s=>s.nombre && s.token && effectiveActive(s))
+    .map(s=>s.nombre)
+    .slice(0,6);
+
+  banner.innerHTML =
+    'DIAGNÓSTICO PILOTO D1 · ' +
+    'DB03 HTTP '+newS.status+
+    ' · filas DB03: '+createdStudents.length+
+    ' · alumnas activas cargadas: '+activeNames.length+
+    (activeNames.length ? ' · '+activeNames.join(' / ') : '')+
+    (newS.error ? ' · ERROR: '+newS.error : '');
+
+  if(document.getElementById('student').value){
+    loadCurrentRoutinesForStudent();
+  }else{
     renderWorkspace();
   }
+
+  // Console detail in case we need a second pass.
+  console.table(results.map(r=>({
+    fuente:r.label,http:r.status,ok:r.ok,filas:r.rows.length,error:r.error
+  })));
+  console.log('DB03 encabezados/primera fila:', createdStudents[0]||null);
 })();
 </script>
 </body>
