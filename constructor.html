@@ -661,15 +661,27 @@ function populateStudents(preferredToken=''){
   const select=document.getElementById('student');
   const previous=preferredToken || select.value;
   select.innerHTML='';
+
   const byToken=new Map();
   allKnownStudents().filter(s=>s.nombre && s.token && effectiveActive(s))
     .forEach(s=>byToken.set(String(s.token).trim(),s));
   const active=[...byToken.values()];
+
   if(!active.length){
     const opt=document.createElement('option');
-    opt.value=''; opt.textContent='No hay alumnas activas';
-    select.appendChild(opt); return;
+    opt.value='';
+    opt.textContent='No hay alumnas activas';
+    select.appendChild(opt);
+    select.value='';
+    return;
   }
+
+  // Al entrar al panel no se selecciona ninguna alumna por defecto.
+  const placeholder=document.createElement('option');
+  placeholder.value='';
+  placeholder.textContent='Elegir alumna';
+  select.appendChild(placeholder);
+
   active.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es',{sensitivity:'base'}))
     .forEach(s=>{
       const opt=document.createElement('option');
@@ -678,7 +690,14 @@ function populateStudents(preferredToken=''){
       opt.dataset.alumnaId=s.alumna_id||'';
       select.appendChild(opt);
     });
-  if(previous && [...select.options].some(o=>o.value===previous)) select.value=previous;
+
+  // Solo seleccionamos automáticamente cuando se pidió explícitamente
+  // (por ejemplo, tras crear/reactivar una alumna).
+  if(previous && [...select.options].some(o=>o.value===previous)){
+    select.value=previous;
+  }else{
+    select.value='';
+  }
 }
 
 
@@ -1449,11 +1468,30 @@ function renderWorkspace(){
     globalIndicator.classList.toggle('pending',!isSaving && isPending);
   }
   if(!token){
-    workspace.innerHTML='<div class="empty">Seleccioná una alumna.</div>';
+    workspace.innerHTML='<div class="empty">Elegí una alumna para visualizar su rutina.</div>';
     document.getElementById('weekSummary').textContent='';
     document.getElementById('studentObjective').textContent='';
+
+    const addDay=document.getElementById('addDayBtn');
+    if(addDay){
+      addDay.disabled=true;
+      addDay.textContent='＋ Agregar día';
+    }
+    const copyBtn=document.getElementById('copySelectedStudentLinkBtn');
+    const viewBtn=document.getElementById('viewFullRoutineBtn');
+    const managementBtn=document.getElementById('studentManagementBtn');
+    if(copyBtn) copyBtn.disabled=true;
+    if(viewBtn) viewBtn.disabled=true;
+    if(managementBtn) managementBtn.disabled=true;
     return;
   }
+
+  const copyBtn=document.getElementById('copySelectedStudentLinkBtn');
+  const viewBtn=document.getElementById('viewFullRoutineBtn');
+  const managementBtn=document.getElementById('studentManagementBtn');
+  if(copyBtn) copyBtn.disabled=false;
+  if(viewBtn) viewBtn.disabled=false;
+  if(managementBtn) managementBtn.disabled=false;
 
   visibleDays=DAY_ORDER.filter(d=>visibleDays.includes(d) || routines[d].length);
 
