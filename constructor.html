@@ -1,0 +1,1748 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Constructor de rutina · Prueba</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--ink:#15171a;--muted:#6b7280;--line:#e5e7eb;--soft:#f9fafb}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.header{background:#111827;color:#fff;padding:22px 18px}
+.header h1{margin:0;font-size:22px}.header p{margin:5px 0 0;opacity:.75;font-size:14px}
+.wrap{max-width:860px;margin:28px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.04);margin-bottom:18px}
+.student-context-card{background:#eef1f4;border-color:#d8dde3;box-shadow:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}
+input,select,textarea{width:100%;padding:12px 13px;border:1px solid #cfd4dc;border-radius:10px;font-size:15px;background:#fff;font:inherit}
+textarea{min-height:88px;resize:vertical}
+.search-wrap{position:relative}
+.results{position:absolute;z-index:10;left:0;right:0;top:49px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,.12);display:none;overflow:hidden}
+.result{padding:11px 13px;border-bottom:1px solid var(--line);cursor:pointer}.result:last-child{border-bottom:0}.result:hover{background:var(--soft)}
+.small{font-size:12px;color:var(--muted)}
+.exercise-preview{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--soft);display:none}
+.exercise-preview b{display:block;margin-bottom:4px}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
+.primary{background:#111827;color:white}.secondary{background:#eef0f3;color:#111827}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;background:white}
+.item-main{min-width:0}.item-title{font-weight:800}.item-sub{font-size:13px;color:var(--muted);margin-top:3px}
+.order{width:28px;height:28px;border-radius:50%;background:#111827;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:0 0 auto}
+.item-left{display:flex;gap:12px;align-items:center;min-width:0}
+.item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.mini{padding:8px 10px;border-radius:8px;background:#eef0f3;color:#111827;font-size:12px}
+.mini.danger{background:#f6eeee;color:#7f1d1d}
+.mini:disabled{opacity:.4;cursor:not-allowed}
+.empty{color:var(--muted);padding:8px 0}
+.note{font-size:13px;color:#4b5563;background:#f3f4f6;border-radius:10px;padding:11px 13px;margin-top:14px}
+.save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;flex-wrap:wrap}
+.save-status{font-size:13px;color:#4b5563;min-height:18px}
+.success{color:#166534;font-weight:700}
+.danger-text{color:#991b1b;font-weight:700}
+.day-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}
+.badge{font-size:12px;background:#eef0f3;border-radius:999px;padding:5px 9px;color:#4b5563}
+.new-student-row{display:flex;justify-content:flex-end;margin-top:10px}
+.link-button{background:transparent;color:#111827;border:1px solid #cfd4dc}
+.modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal-backdrop.show{display:flex}
+.modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.25)}
+.modal-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:16px}
+.modal-head h2{margin:0}
+.icon-btn{background:#eef0f3;color:#111827;padding:8px 11px}
+.full{grid-column:1/-1}
+.created-box{margin-top:16px;padding:14px;border-radius:12px;background:#f3f4f6;display:none}
+.created-link{word-break:break-all;font-size:13px;margin:7px 0 11px}
+.management-row{display:flex;justify-content:center;margin:22px 0 0}
+.management-btn{background:#fff;color:#111827;border:1px solid #d1d5db}
+.state-actions{display:grid;gap:10px}
+.inactive-list{display:grid;gap:8px;margin:12px 0}
+.inactive-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #e5e7eb;border-radius:10px;cursor:pointer}
+.inactive-item input{width:auto}
+.editing{outline:2px solid #111827;outline-offset:2px}
+
+.block-type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.type-btn{background:#f3f4f6;color:#111827;border:1px solid #d1d5db}
+.type-btn.active{background:#111827;color:#fff;border-color:#111827}
+.builder-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 8px}
+.draft-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.draft-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fafafa}
+.block-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.block-card.combined{border-left:4px solid #111827}
+.block-label{font-size:11px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;color:#6b7280;margin-bottom:6px}
+.block-exercises{display:flex;flex-direction:column;gap:4px;margin-top:7px}
+.block-exercise{font-size:13px;color:#374151}
+.block-note{font-size:12px;color:#4b5563;background:#f3f4f6;border-radius:8px;padding:8px 10px;margin-top:8px}
+@media(max-width:700px){.block-type-row{grid-template-columns:1fr 1fr}.item{align-items:flex-start}.item-actions{min-width:110px}}
+
+
+.week-header{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:14px}
+.week-title{margin:0;font-size:22px}
+.week-summary{font-size:13px;color:var(--muted)}
+.day-card{border:1px solid #d8dde3;border-radius:16px;background:#f3f5f7;margin-bottom:14px;overflow:hidden}
+.day-card.dirty{box-shadow:0 0 0 2px rgba(17,24,39,.08)}
+.day-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:15px 16px;background:#e9edf1;border-bottom:1px solid #d8dde3}
+.day-head-left{display:flex;gap:10px;align-items:center;min-width:0}
+.day-name{font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.day-head-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.day-body{padding:14px;background:#f3f5f7}
+.day-card.collapsed .day-body{display:none}
+.day-card.collapsed .day-head{border-bottom:none}
+.day-list{display:flex;flex-direction:column;gap:10px}
+.routine-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border:1px solid #dfe3e8;border-radius:12px;padding:12px;background:#fff}
+.routine-row.combined{border-left:4px solid #111827}
+.routine-main{min-width:0;flex:1}
+.routine-title{font-weight:800;font-size:15px}
+.routine-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
+.routine-note{font-size:12px;background:#f5f6f8;border-radius:8px;padding:7px 9px;margin-top:7px;color:#4b5563}
+.routine-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.day-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.inline-editor{margin:12px 0 2px;border:1px solid #c4cbd3;border-radius:14px;padding:16px;background:#e3e8ed;box-shadow:inset 0 1px 0 rgba(255,255,255,.75)}
+.inline-editor h3{margin:0 0 12px}
+.inline-editor input,.inline-editor select,.inline-editor textarea{background:#fff}
+button:disabled{cursor:not-allowed;opacity:1}
+.save-day-disabled{background:#f4f5f6!important;color:#a2a8b0!important;border:1px solid #e1e4e8!important;box-shadow:none!important}
+.editor-save-disabled{background:#d9dde2!important;color:#8a919a!important;box-shadow:none!important}
+.editor-section{margin-top:14px}
+.editor-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.day-add-btn{width:auto}
+.day-delete-btn{width:auto;background:transparent;color:#a33a3a;border:1px solid #ddbcbc;padding:10px 12px}
+.day-delete-btn:hover{background:#fff5f5}
+.day-footer-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.add-day-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.routine-save-indicator{font-size:13px;font-weight:700;color:#5f6b63;display:flex;align-items:center;gap:6px}
+.routine-save-indicator.saving{color:#7a6f55}
+.routine-save-indicator.pending{color:#7b6b45}
+.super-top-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.super-exercises{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.super-ex-card{background:#fff;border:1px solid #d7dde4;border-radius:12px;padding:14px}
+.super-ex-card .search-wrap{position:relative}.super-ex-card .results{top:49px;max-height:280px;overflow-y:auto}
+.super-ex-title{font-weight:800;margin-bottom:12px}
+.super-ex-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+@media(max-width:700px){.super-top-grid,.super-ex-grid{grid-template-columns:1fr}}
+.rename-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){
+  .week-header{align-items:flex-start;flex-direction:column}
+  .day-head{align-items:flex-start}
+  .day-head-actions{max-width:45%}
+  .routine-row{flex-direction:column}
+  .routine-actions{width:100%;justify-content:flex-start}
+  .rename-grid{grid-template-columns:1fr}
+}
+
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Constructor de rutina</h1>
+  <p>Prueba de flujo · entrenador</p>
+</div>
+
+<div class="wrap">
+  <div class="card student-context-card">
+    <div>
+      <label>Alumna</label>
+      <select id="student">
+        <option value="">Cargando alumnas…</option>
+      </select>
+      <div class="new-student-row" style="gap:8px;flex-wrap:wrap">
+        <button id="copySelectedStudentLinkBtn" class="link-button" type="button">Copiar enlace para alumna</button>
+        <button id="viewFullRoutineBtn" class="link-button" type="button">Ver rutina completa</button>
+        <button id="newStudentBtn" class="link-button" type="button">＋ Nueva alumna</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="week-header">
+      <div>
+        <h2 class="week-title">Rutina actual</h2>
+        <div id="studentObjective" class="week-summary" style="margin-top:4px"></div>
+        <div id="weekSummary" class="week-summary">Cargando rutina…</div>
+      </div>
+    </div>
+    <div id="routineWorkspace"></div>
+    <div class="add-day-row">
+      <button id="addDayBtn" class="secondary" type="button">＋ Agregar día</button>
+      <div id="routineSaveIndicator" class="routine-save-indicator">✓ Rutina guardada</div>
+    </div>
+  </div>
+
+  <div id="editorParking" style="display:none"></div>
+
+  <div id="editorPanel" class="inline-editor" style="display:none">
+    <div class="editor-toolbar">
+      <div>
+        <div class="small" style="font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#69717c">Editor</div>
+        <h3 id="editorTitle">Agregar</h3>
+      </div>
+      <button id="closeEditorBtn" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <div id="typeSection">
+      <label>Tipo</label>
+      <div class="block-type-row">
+        <button id="individualTypeBtn" class="type-btn active" type="button">Ejercicio individual</button>
+        <button id="combinedTypeBtn" class="type-btn" type="button">Superserie</button>
+      </div>
+    </div>
+
+    <div id="lockedExerciseBox" style="display:none;margin:4px 0 16px">
+      <div class="small" style="font-weight:700;text-transform:uppercase;letter-spacing:.35px">Ejercicio</div>
+      <div id="lockedExerciseName" style="font-size:20px;font-weight:800;margin-top:3px"></div>
+    </div>
+
+    <div id="individualEditorSection">
+      <div id="exerciseSelectSection">
+        <div class="builder-head">
+          <div>
+            <b>Ejercicio</b>
+            <div class="small">Seleccionar un ejercicio de la biblioteca</div>
+          </div>
+        </div>
+
+        <label>Buscar ejercicio</label>
+        <div class="search-wrap">
+          <input id="search" placeholder="Ej.: Hack, remo, jalón…" autocomplete="off">
+          <div id="results" class="results"></div>
+        </div>
+
+        <div id="preview" class="exercise-preview">
+          <b id="previewName"></b>
+          <div id="previewMeta" class="small"></div>
+        </div>
+      </div>
+
+      <div class="editor-section">
+        <div class="grid">
+          <div>
+            <label>Series</label>
+            <input id="series" type="number" min="1" max="10" value="3">
+          </div>
+          <div>
+            <label>Repeticiones</label>
+            <input id="reps" placeholder="Ej.: 8-12">
+          </div>
+          <div>
+            <label>Tempo</label>
+            <input id="tempo" inputmode="numeric" pattern="[0-9]*" placeholder="Ej.: 3010">
+          </div>
+          <div>
+            <label>Carga inicial</label>
+            <input id="load" placeholder="Ej.: 20 kg">
+          </div>
+          <div class="full">
+            <label>Indicaciones para la alumna</label>
+            <textarea id="trainerNote" placeholder="Ej.: Última serie cerca del fallo."></textarea>
+            <div class="small" style="margin-top:6px">Opcional.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="superEditorSection" style="display:none">
+      <div class="super-top-grid">
+        <div>
+          <label>Cantidad de ejercicios</label>
+          <select id="superExerciseCount">
+            <option value="2">2 ejercicios</option>
+            <option value="3">3 ejercicios</option>
+            <option value="4">4 ejercicios</option>
+            <option value="5">5 ejercicios</option>
+          </select>
+        </div>
+        <div>
+          <label>Número de vueltas</label>
+          <input id="superRounds" type="number" min="1" max="10" value="3">
+        </div>
+      </div>
+
+      <div id="superExercisesContainer" class="super-exercises"></div>
+
+      <div class="editor-section">
+        <label>Indicaciones para la alumna sobre la superserie</label>
+        <textarea id="superNote" placeholder="Ej.: Sin descanso entre ejercicios. Descansá 90 s al completar cada vuelta."></textarea>
+        <div class="small" style="margin-top:6px">Opcional · se mostrará una sola vez para toda la superserie.</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="cancelEditBtn" class="secondary" type="button">Cancelar</button>
+      <button id="finishBlockBtn" type="button" style="display:none"></button>
+      <button id="addBtn" class="primary" type="button">Agregar ejercicio</button>
+    </div>
+  </div>
+
+  <form id="saveForm"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSfIv0E4QQqQFFoTxxUngLl7QT3Vg-Aq-AHtY7T6bIPSMj4jtw/formResponse"
+        method="POST"
+        target="save_iframe"
+        style="display:none">
+    <input type="hidden" name="entry.641616930" id="sfToken">
+    <input type="hidden" name="entry.1559739464" id="sfDia">
+    <input type="hidden" name="entry.1856481497" id="sfVersion">
+    <input type="hidden" name="entry.1214112550" id="sfOrden">
+    <input type="hidden" name="entry.307982695" id="sfIdEjercicio">
+    <input type="hidden" name="entry.114549077" id="sfEjercicio">
+    <input type="hidden" name="entry.181119755" id="sfSeries">
+    <input type="hidden" name="entry.2046005905" id="sfReps">
+    <input type="hidden" name="entry.2087582087" id="sfTempo">
+    <input type="hidden" name="entry.465891400" id="sfCargaInicial">
+    <input type="hidden" name="entry.677500509" id="sfNotaEntrenador">
+    <input type="hidden" name="entry.305776418" id="sfBloqueId">
+    <input type="hidden" name="entry.460252504" id="sfTipoBloque">
+    <input type="hidden" name="entry.1068511390" id="sfOrdenBloque">
+    <input type="hidden" name="entry.494109986" id="sfOrdenEnBloque">
+  </form>
+  <iframe name="save_iframe" style="display:none"></iframe>
+</div>
+
+
+<div class="management-row">
+  <button id="studentManagementBtn" class="management-btn" type="button">Gestión de alumna</button>
+</div>
+
+
+<div id="renameDayModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="small">Nombre visible</div><h2>Cambiar nombre</h2></div>
+      <button id="closeRenameDayModal" class="icon-btn" type="button">✕</button>
+    </div>
+    <div class="rename-grid">
+      <div>
+        <label>Tipo</label>
+        <select id="dayLabelType">
+          <option value="DIA">Día</option>
+          <option value="BLOQUE">Bloque</option>
+        </select>
+      </div>
+      <div>
+        <label>Nombre</label>
+        <input id="dayLabelName" list="weekdayOptions" placeholder="Ej.: Lunes o Piernas">
+        <datalist id="weekdayOptions">
+          <option value="Lunes"><option value="Martes"><option value="Miércoles">
+          <option value="Jueves"><option value="Viernes"><option value="Sábado"><option value="Domingo">
+        </datalist>
+      </div>
+    </div>
+    <div class="small" style="margin-top:8px">Dejá el nombre vacío para volver al nombre predeterminado.</div>
+    <div class="actions">
+      <button id="cancelRenameDayBtn" class="secondary" type="button">Cancelar</button>
+      <button id="saveRenameDayBtn" class="primary" type="button">Guardar nombre</button>
+    </div>
+  </div>
+</div>
+
+<div id="managementModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="small">Administración</div><h2>Gestión de alumna</h2></div>
+      <button id="closeManagementModal" class="icon-btn" type="button">✕</button>
+    </div>
+    <div class="state-actions">
+      <button id="deactivateStudentBtn" class="secondary" type="button">Dar de baja alumna</button>
+      <button id="inactiveStudentsBtn" class="secondary" type="button">Alumnas inactivas</button>
+    </div>
+  </div>
+</div>
+
+<div id="inactiveModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="small">Historial</div><h2>Alumnas inactivas</h2></div>
+      <button id="closeInactiveModal" class="icon-btn" type="button">✕</button>
+    </div>
+    <div id="inactiveList" class="inactive-list"></div>
+    <div class="actions">
+      <button id="reactivateStudentBtn" class="primary" type="button" disabled>Reactivar alumna</button>
+    </div>
+  </div>
+</div>
+
+<div id="studentModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="small">Alta desde el panel</div><h2>Nueva alumna</h2></div>
+      <button id="closeStudentModal" class="icon-btn" type="button">✕</button>
+    </div>
+    <div class="grid">
+      <div><label>Nombre *</label><input id="nsNombre" placeholder="Ej.: Sabrina Gómez"></div>
+      <div><label>Fecha de inicio</label><input id="nsFecha" type="date"></div>
+      <div class="full"><label>Objetivo principal</label><input id="nsObjetivo" placeholder="Ej.: Hipertrofia y recomposición corporal"></div>
+    </div>
+    <div class="actions">
+      <button id="cancelStudentBtn" class="secondary" type="button">Cancelar</button>
+      <button id="saveStudentBtn" class="primary" type="button">Guardar alumna</button>
+    </div>
+    <div id="createdStudentBox" class="created-box">
+      <b>✓ Alumna creada</b>
+      <div id="createdStudentMeta" class="small" style="margin-top:5px"></div>
+      <div id="createdStudentLink" class="created-link"></div>
+      <button id="copyStudentLinkBtn" class="secondary" type="button">Copiar enlace</button>
+    </div>
+  </div>
+</div>
+
+<form id="studentForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfj2bSrrtbk7f26DxtQu9AZielrVumjU_6Wq6SIEL9QoEWd2g/formResponse" method="POST" target="student_iframe" style="display:none">
+  <input type="hidden" name="entry.3406358" id="afAlumnaId">
+  <input type="hidden" name="entry.1054094851" id="afNombre">
+  <input type="hidden" name="entry.26884833" id="afObjetivo">
+  <input type="hidden" name="entry.435061558" id="afFecha">
+  <input type="hidden" name="entry.1750407016" id="afToken">
+  <input type="hidden" name="entry.249303003" id="afActivo">
+</form>
+<iframe name="student_iframe" style="display:none"></iframe>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq0vsM4pdfnzXMvN0WlceU4Tno44ttI_Xs4EPME_RpJuTbFwwx5aZx7v97wZs1BhLDu7TN5i1hCatY/pub?gid=41200741&single=true&output=csv";
+const CURRENT_ROUTINES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMHhQr9bZmTQkw67Aj7v5mRXRIC-T3tUfkO8sxtBgcYcXBid-mEV31OaBbUagrK8csm32ON9a0rVuX/pub?gid=339469399&single=true&output=csv";
+const STUDENTS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq0vsM4pdfnzXMvN0WlceU4Tno44ttI_Xs4EPME_RpJuTbFwwx5aZx7v97wZs1BhLDu7TN5i1hCatY/pub?gid=1888921254&single=true&output=csv";
+const NEW_STUDENTS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRonYAKol1CySnuHwPDVktKld_padRKy9F_ZYYogyDCkOz7hZkBFKCnxiYnej01QsUPPuhKjejEWWEQ/pub?gid=1004033237&single=true&output=csv";
+const STUDENT_STATE_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7BPBIklMyjNK_GcJ1K0slb_JW0fkU7B82AutWkglCb8d5UmiKDaiW4urPmtCxGTXANdIB0Z21l1kO/pub?gid=1659100872&single=true&output=csv";
+const DAY_NAMES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSosV9FXjIIj8qjK_UG5_SmH4_idZ0Fxo39TD4DPD1-DzRzsDYRFb7xGfu6OCSYrq5Ksi09RuWiAvtB/pub?gid=845125079&single=true&output=csv";
+const DAY_NAMES_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSe__2n7_OjTUm_Ehxx8-RLcPzFG17FD2cr6QjX5pI4vS9u8hQ/formResponse";
+const DAY_LABEL_CACHE_TTL_MS = 10 * 60 * 1000; // respaldo temporal por 10 minutos
+let exercises=[], currentRows=[], students=[], studentStates=[], selected=null, routines={A:[],B:[],C:[],D:[],E:[],F:[]};
+let blockMode='INDIVIDUAL', blockDraft=[], editingBlockIndex=null, editingDraftIndex=null;
+let editorContext=null, visibleDays=[], collapsedDays=new Set(), dirtyDays=new Set(), dayLabels={}, dayNameRows=[], renamingDay=null, editorDirty=false;
+let savingDays=new Set(), saveState={}, routineMetaSaving=false;
+let reorderTimers=new Map(), pendingReorderDays=new Set(), savedDaySignatures={};
+let loadedStudentToken='';
+
+function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function splitLine(line){
+  const out=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){
+      if(q && line[i+1]==='"'){cur+='"';i++;}
+      else q=!q;
+    }else if(ch===','&&!q){out.push(cur);cur='';}
+    else cur+=ch;
+  }
+  out.push(cur);return out;
+}
+function normalizeHeader(h){
+  return String(h||'')
+    .replace(/^\uFEFF/,'')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'_')
+    .replace(/^_+|_+$/g,'');
+}
+
+function parseCSV(text){
+  const lines=text.replace(/\r/g,'').split('\n').filter(x=>x.trim()!=='');
+  if(!lines.length) return [];
+  const headers=splitLine(lines[0]).map(normalizeHeader);
+  return lines.slice(1).map(line=>{
+    const vals=splitLine(line), o={};
+    headers.forEach((h,i)=>o[h]=(vals[i]||'').trim());
+    return o;
+  });
+}
+function renderResults(items){
+  const box=document.getElementById('results');
+  box.innerHTML='';
+  if(!items.length){
+    box.innerHTML='<div class="result small">No encontré ejercicios.</div>';
+    box.style.display='block';return;
+  }
+  items.slice(0,8).forEach(ex=>{
+    const d=document.createElement('div');
+    d.className='result';d.textContent=ex.ejercicio;
+    d.onclick=()=>choose(ex);box.appendChild(d);
+  });
+  box.style.display='block';
+}
+function choose(ex){
+  selected=ex;
+  document.getElementById('search').value=ex.ejercicio;
+  document.getElementById('results').style.display='none';
+  document.getElementById('preview').style.display='block';
+  document.getElementById('previewName').textContent=ex.ejercicio;
+  const bits=[];
+  if(ex.video_url) bits.push('video cargado');
+  if(ex.intencion||ex.sensacion||ex.error_evitar) bits.push('claves cargadas');
+  document.getElementById('previewMeta').textContent=bits.length?bits.join(' · '):'Sin datos complementarios cargados';
+}
+function isActiveValue(v){
+  const s=String(v||'').trim().toLowerCase();
+  return ['true','verdadero','1','si','sí','yes'].includes(s);
+}
+
+function populateStudents(preferredToken=''){
+  const select=document.getElementById('student');
+  const previous=preferredToken || select.value;
+  select.innerHTML='';
+  const byToken=new Map();
+  allKnownStudents().filter(s=>s.nombre && s.token && effectiveActive(s))
+    .forEach(s=>byToken.set(String(s.token).trim(),s));
+  const active=[...byToken.values()];
+  if(!active.length){
+    const opt=document.createElement('option');
+    opt.value=''; opt.textContent='No hay alumnas activas';
+    select.appendChild(opt); return;
+  }
+  active.sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es',{sensitivity:'base'}))
+    .forEach(s=>{
+      const opt=document.createElement('option');
+      opt.value=String(s.token).trim();
+      opt.textContent=s.nombre;
+      opt.dataset.alumnaId=s.alumna_id||'';
+      select.appendChild(opt);
+    });
+  if(previous && [...select.options].some(o=>o.value===previous)) select.value=previous;
+}
+
+
+function slugifyName(name){
+  return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24) || 'alumna';
+}
+function shortCode(){
+  const chars='abcdefghjkmnpqrstuvwxyz23456789';
+  let out='';
+  if(window.crypto && crypto.getRandomValues){
+    const arr=new Uint32Array(6); crypto.getRandomValues(arr);
+    for(const n of arr) out+=chars[n%chars.length];
+  }else{
+    for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];
+  }
+  return out;
+}
+function generateStudentIdentity(name){
+  return {token:slugifyName(name)+'-'+shortCode(), alumnaId:'ALU-'+Date.now().toString().slice(-7)};
+}
+function resetStudentModal(){
+  ['nsNombre','nsObjetivo','nsFecha'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('createdStudentBox').style.display='none';
+  document.getElementById('saveStudentBtn').disabled=false;
+}
+function openStudentModal(){
+  resetStudentModal();
+  const m=document.getElementById('studentModal'); m.classList.add('show'); m.setAttribute('aria-hidden','false');
+  setTimeout(()=>document.getElementById('nsNombre').focus(),50);
+}
+function closeStudentModal(){
+  const m=document.getElementById('studentModal'); m.classList.remove('show'); m.setAttribute('aria-hidden','true');
+}
+document.getElementById('newStudentBtn').addEventListener('click',openStudentModal);
+document.getElementById('closeStudentModal').addEventListener('click',closeStudentModal);
+document.getElementById('cancelStudentBtn').addEventListener('click',closeStudentModal);
+document.getElementById('studentModal').addEventListener('click',e=>{if(e.target===document.getElementById('studentModal')) closeStudentModal();});
+
+document.getElementById('saveStudentBtn').addEventListener('click',()=>{
+  const nombre=document.getElementById('nsNombre').value.trim();
+  if(!nombre){ alert('Ingresá el nombre de la alumna.'); return; }
+  const objetivo=document.getElementById('nsObjetivo').value.trim();
+  const fecha=document.getElementById('nsFecha').value;
+  const {token,alumnaId}=generateStudentIdentity(nombre);
+
+  document.getElementById('afAlumnaId').value=alumnaId;
+  document.getElementById('afNombre').value=nombre;
+  document.getElementById('afObjetivo').value=objetivo;
+  document.getElementById('afFecha').value=fecha;
+  document.getElementById('afToken').value=token;
+  document.getElementById('afActivo').value='TRUE';
+  document.getElementById('studentForm').submit();
+
+  students.push({alumna_id:alumnaId,nombre,objetivo_principal:objetivo,fecha_inicio:fecha,token,activo:'TRUE'});
+  populateStudents(token);
+  loadCurrentRoutinesForStudent();
+
+  const link='https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas/?token='+encodeURIComponent(token);
+  document.getElementById('createdStudentMeta').textContent='ID: '+alumnaId+' · Token: '+token;
+  document.getElementById('createdStudentLink').textContent=link;
+  document.getElementById('createdStudentBox').style.display='block';
+  document.getElementById('saveStudentBtn').disabled=true;
+
+  // Volver automáticamente al panel luego de guardar,
+  // manteniendo seleccionada la alumna recién creada.
+  setTimeout(()=>{
+    closeStudentModal();
+  },500);
+});
+document.getElementById('copyStudentLinkBtn').addEventListener('click',async()=>{
+  const link=document.getElementById('createdStudentLink').textContent;
+  try{
+    await navigator.clipboard.writeText(link);
+    const b=document.getElementById('copyStudentLinkBtn'); b.textContent='✓ Copiado';
+    setTimeout(()=>b.textContent='Copiar enlace',1500);
+  }catch(e){ prompt('Copiá este enlace:',link); }
+});
+
+
+function selectedStudentLink(){
+  const token=document.getElementById('student').value;
+  if(!token) return '';
+  return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas/?token='+encodeURIComponent(token);
+}
+
+document.getElementById('copySelectedStudentLinkBtn').addEventListener('click',async()=>{
+  const link=selectedStudentLink();
+  if(!link){
+    alert('Seleccioná una alumna primero.');
+    return;
+  }
+
+  const btn=document.getElementById('copySelectedStudentLinkBtn');
+  try{
+    await navigator.clipboard.writeText(link);
+    const oldText=btn.textContent;
+    btn.textContent='✓ Enlace copiado';
+    setTimeout(()=>btn.textContent=oldText,1500);
+  }catch(e){
+    prompt('Copiá este enlace para la alumna:',link);
+  }
+});
+
+
+function selectedFullRoutineLink(){
+  const token=document.getElementById('student').value;
+  if(!token) return '';
+  return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas/rutina.html?token='+encodeURIComponent(token);
+}
+
+document.getElementById('viewFullRoutineBtn').addEventListener('click',async()=>{
+  const link=selectedFullRoutineLink();
+  if(!link){
+    alert('Seleccioná una alumna primero.');
+    return;
+  }
+
+  const ok=await flushAllPending();
+  if(ok===false){
+    alert('No se pudo completar un guardado pendiente. Volvé a intentar.');
+    return;
+  }
+
+  window.open(link,'_blank','noopener');
+});
+
+
+function latestStateMap(){
+  const map=new Map();
+  studentStates.forEach(r=>{
+    const token=String(r.token||'').trim();
+    if(token) map.set(token,{activo:String(r.activo||'').trim(),accion:String(r.accion||'').trim()});
+  });
+  return map;
+}
+function effectiveActive(student){
+  const st=latestStateMap().get(String(student.token||'').trim());
+  return st ? isActiveValue(st.activo) : isActiveValue(student.activo);
+}
+function allKnownStudents(){
+  const byToken=new Map();
+  students.forEach(s=>{ const t=String(s.token||'').trim(); if(t) byToken.set(t,s); });
+  return [...byToken.values()];
+}
+async function submitStudentState(token,action,active){
+  const endpoint='https://docs.google.com/forms/d/e/1FAIpQLSfB9K2cnhlYWSqqzaLZOpeE_reyp0ZuUr0kvmzb7kDOfKrXlg/formResponse';
+  const body=new URLSearchParams();
+  body.append('entry.1955490611',token);
+  body.append('entry.1193693172',action);
+  body.append('entry.279390491',active?'TRUE':'FALSE');
+
+  await fetch(endpoint,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:body.toString()
+  });
+
+  studentStates.push({token,accion:action,activo:active?'TRUE':'FALSE'});
+}
+function openModalById(id){ const m=document.getElementById(id); m.classList.add('show'); m.setAttribute('aria-hidden','false'); }
+function closeModalById(id){ const m=document.getElementById(id); m.classList.remove('show'); m.setAttribute('aria-hidden','true'); }
+
+function renderInactiveList(){
+  const box=document.getElementById('inactiveList');
+  const inactive=allKnownStudents().filter(s=>!effectiveActive(s))
+    .sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es',{sensitivity:'base'}));
+  box.innerHTML='';
+  const react=document.getElementById('reactivateStudentBtn');
+  react.disabled=true; react.dataset.token='';
+  if(!inactive.length){ box.innerHTML='<div class="small">No hay alumnas inactivas.</div>'; return; }
+  inactive.forEach(s=>{
+    const label=document.createElement('label'); label.className='inactive-item';
+    const radio=document.createElement('input'); radio.type='radio'; radio.name='inactiveStudent'; radio.value=String(s.token).trim();
+    radio.addEventListener('change',()=>{ react.disabled=false; react.dataset.token=radio.value; });
+    const span=document.createElement('span'); span.textContent=s.nombre;
+    label.append(radio,span); box.appendChild(label);
+  });
+}
+
+document.getElementById('studentManagementBtn').addEventListener('click',()=>openModalById('managementModal'));
+document.getElementById('closeManagementModal').addEventListener('click',()=>closeModalById('managementModal'));
+document.getElementById('closeInactiveModal').addEventListener('click',()=>closeModalById('inactiveModal'));
+
+document.getElementById('inactiveStudentsBtn').addEventListener('click',()=>{
+  closeModalById('managementModal'); renderInactiveList(); openModalById('inactiveModal');
+});
+
+document.getElementById('deactivateStudentBtn').addEventListener('click',async()=>{
+  const select=document.getElementById('student');
+  const token=select.value;
+  const name=select.options[select.selectedIndex]?.textContent||'esta alumna';
+  if(!token){ alert('Seleccioná una alumna primero.'); return; }
+  if(!confirm('¿Dar de baja a '+name+'? Su historial y rutinas se conservarán.')) return;
+  await submitStudentState(token,'BAJA',false);
+  alert('Alumna dada de baja correctamente.');
+  populateStudents('');
+  closeModalById('managementModal');
+  if(document.getElementById('student').value) loadCurrentRoutinesForStudent();
+  else { routines={A:[],B:[],C:[],D:[],E:[],F:[]}; visibleDays=[]; renderWorkspace(); }
+});
+
+document.getElementById('reactivateStudentBtn').addEventListener('click',async()=>{
+  const token=document.getElementById('reactivateStudentBtn').dataset.token;
+  if(!token) return;
+  await submitStudentState(token,'REACTIVACION',true);
+  alert('Alumna reactivada correctamente.');
+  populateStudents(token);
+  renderInactiveList();
+  loadCurrentRoutinesForStudent();
+});
+
+
+const DAY_ORDER=['A','B','C','D','E','F'];
+
+function daySignature(day){
+  const blocks=routines[day]||[];
+  return JSON.stringify(blocks.map(block=>({
+    bloque_id:String(block.bloque_id||''),
+    tipo_bloque:String(block.tipo_bloque||'INDIVIDUAL'),
+    series:String(block.series||''),
+    nota_entrenador:String(block.nota_entrenador||''),
+    exercises:(block.exercises||[]).map(ex=>({
+      id_ejercicio:String(ex.id_ejercicio||''),
+      ejercicio:String(ex.ejercicio||''),
+      reps:String(ex.reps||''),
+      tempo:String(ex.tempo||''),
+      load:String(ex.load||'')
+    }))
+  })));
+}
+
+function hasPendingSaves(){
+  return pendingReorderDays.size>0 || savingDays.size>0 || routineMetaSaving;
+}
+
+function cancelReorderTimer(day){
+  const timer=reorderTimers.get(day);
+  if(timer) clearTimeout(timer);
+  reorderTimers.delete(day);
+}
+
+function scheduleReorderSave(day){
+  cancelReorderTimer(day);
+  pendingReorderDays.add(day);
+  saveState[day]='Cambios pendientes…';
+  renderWorkspace();
+
+  const timer=setTimeout(async()=>{
+    reorderTimers.delete(day);
+    pendingReorderDays.delete(day);
+    await commitDay(day);
+  },1800);
+  reorderTimers.set(day,timer);
+}
+
+async function flushPendingDay(day){
+  if(!pendingReorderDays.has(day)) return true;
+  cancelReorderTimer(day);
+  pendingReorderDays.delete(day);
+  return await commitDay(day);
+}
+
+async function flushAllPending(){
+  const days=[...pendingReorderDays];
+  for(const day of days){
+    const ok=await flushPendingDay(day);
+    if(ok===false && savedDaySignatures[day]!==daySignature(day)) return false;
+  }
+  while(savingDays.size>0){
+    await sleep(80);
+  }
+  return true;
+}
+
+function currentDay(){
+  return editorContext?.day || visibleDays[0] || 'A';
+}
+
+function makeBlockId(day){
+  return 'BLK_'+day+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+}
+
+function normalizeType(v){
+  return String(v||'').trim().toUpperCase()==='COMBINADO' ? 'COMBINADO' : 'INDIVIDUAL';
+}
+
+function dayLabelCacheKey(token){
+  return 'ii_day_label_cache_'+String(token||'').trim();
+}
+function readDayLabelCache(token){
+  try{
+    const raw=JSON.parse(localStorage.getItem(dayLabelCacheKey(token))||'{}')||{};
+    const now=Date.now();
+    const clean={};
+    Object.entries(raw).forEach(([day,item])=>{
+      if(!item || !item.savedAt) return;
+      if(now-Number(item.savedAt)>DAY_LABEL_CACHE_TTL_MS) return;
+      clean[day]=item;
+    });
+    if(Object.keys(clean).length) localStorage.setItem(dayLabelCacheKey(token),JSON.stringify(clean));
+    else localStorage.removeItem(dayLabelCacheKey(token));
+    return clean;
+  }catch(e){
+    return {};
+  }
+}
+function writeDayLabelCache(token,day,type,name){
+  try{
+    const current=readDayLabelCache(token);
+    current[day]={type,name,savedAt:Date.now()};
+    localStorage.setItem(dayLabelCacheKey(token),JSON.stringify(current));
+  }catch(e){}
+}
+function clearConfirmedDayLabelCache(token,confirmedLabels){
+  try{
+    const current=readDayLabelCache(token);
+    let changed=false;
+    Object.keys(current).forEach(day=>{
+      const cached=current[day];
+      const confirmed=confirmedLabels[day];
+      const sameName=String(cached?.name||'')===String(confirmed?.name||'');
+      const sameType=String(cached?.type||'DIA')===String(confirmed?.type||'DIA');
+      if(sameName && sameType){
+        delete current[day];
+        changed=true;
+      }
+    });
+    if(changed){
+      if(Object.keys(current).length) localStorage.setItem(dayLabelCacheKey(token),JSON.stringify(current));
+      else localStorage.removeItem(dayLabelCacheKey(token));
+    }
+    return current;
+  }catch(e){
+    return {};
+  }
+}
+function loadDayLabels(){
+  const token=String(document.getElementById('student').value||'').trim();
+  const confirmed={};
+  dayNameRows.forEach(r=>{
+    if(String(r.token||'').trim()!==token) return;
+    const day=String(r.dia_id||r.dia||'').trim().toUpperCase();
+    if(!DAY_ORDER.includes(day)) return;
+    const name=String(r.nombre_visible||'').trim();
+    const type=String(r.tipo_nombre||'DIA').trim().toUpperCase()==='BLOQUE'?'BLOQUE':'DIA';
+    if(name) confirmed[day]={type,name};
+    else delete confirmed[day];
+  });
+
+  dayLabels={...confirmed};
+
+  // Si el CSV publicado todavía no reflejó un cambio recién guardado,
+  // usamos por unos minutos la copia local como respaldo visual.
+  const pendingCache=clearConfirmedDayLabelCache(token,confirmed);
+  Object.entries(pendingCache).forEach(([day,item])=>{
+    if(item.name) dayLabels[day]={type:item.type||'DIA',name:item.name};
+    else delete dayLabels[day];
+  });
+}
+function dayTitle(day){
+  const cfg=dayLabels[day];
+  if(!cfg || !cfg.name) return 'Día '+day;
+  return cfg.type==='BLOQUE' ? 'Bloque · '+cfg.name : 'Día '+cfg.name;
+}
+async function persistDayLabel(day,type,name){
+  const token=String(document.getElementById('student').value||'').trim();
+  if(!token) throw new Error('No hay alumna seleccionada.');
+  const body=new URLSearchParams({
+    'entry.1093461246':token,
+    'entry.1373914533':day,
+    'entry.582279446':type,
+    'entry.200056580':name
+  });
+  await fetch(DAY_NAMES_FORM,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:body.toString()
+  });
+  writeDayLabelCache(token,day,type,name);
+  dayNameRows.push({token,dia_id:day,tipo_nombre:type,nombre_visible:name});
+}
+
+
+function loadCurrentRoutinesForStudent(){
+  const token=document.getElementById('student').value;
+  loadedStudentToken=token;
+  const fresh={A:[],B:[],C:[],D:[],E:[],F:[]};
+  const rows=currentRows
+    .filter(r=>String(r.token||'').trim()===token)
+    .sort((a,b)=>{
+      const d=DAY_ORDER.indexOf(String(a.dia||'').trim().toUpperCase())-DAY_ORDER.indexOf(String(b.dia||'').trim().toUpperCase());
+      if(d!==0) return d;
+      const bo=(Number(a.orden_bloque)||Number(a.orden)||0)-(Number(b.orden_bloque)||Number(b.orden)||0);
+      if(bo!==0) return bo;
+      return (Number(a.orden_en_bloque)||1)-(Number(b.orden_en_bloque)||1);
+    });
+
+  const maps={A:new Map(),B:new Map(),C:new Map(),D:new Map(),E:new Map(),F:new Map()};
+  rows.forEach((r,idx)=>{
+    const day=String(r.dia||'').trim().toUpperCase();
+    if(!fresh[day]) return;
+    const type=normalizeType(r.tipo_bloque);
+    const fallback='LEGACY_'+day+'_'+String(r.orden||idx+1);
+    const blockId=String(r.bloque_id||'').trim() || fallback;
+    let block=maps[day].get(blockId);
+    if(!block){
+      block={bloque_id:blockId,tipo_bloque:type,series:r.series||'3',nota_entrenador:r.nota_entrenador||'',exercises:[]};
+      maps[day].set(blockId,block);
+      fresh[day].push(block);
+    }
+    if(!block.nota_entrenador && r.nota_entrenador) block.nota_entrenador=r.nota_entrenador;
+    block.exercises.push({
+      id_ejercicio:r.id_ejercicio||'',
+      ejercicio:r.ejercicio||'',
+      reps:r.reps||'',
+      tempo:r.tempo||'',
+      load:r.carga_inicial||''
+    });
+  });
+
+  routines=fresh;
+  visibleDays=DAY_ORDER.filter(d=>routines[d].length);
+  collapsedDays=new Set();
+  dirtyDays=new Set();
+  reorderTimers.forEach(timer=>clearTimeout(timer));
+  reorderTimers.clear();
+  pendingReorderDays.clear();
+  savedDaySignatures={};
+  DAY_ORDER.forEach(d=>{
+    if(routines[d].length) savedDaySignatures[d]=daySignature(d);
+  });
+  loadDayLabels();
+  closeEditor(false);
+  renderWorkspace();
+}
+
+function parkEditor(){
+  const panel=document.getElementById('editorPanel');
+  const parking=document.getElementById('editorParking');
+  if(panel && parking && panel.parentElement!==parking) parking.appendChild(panel);
+  if(panel) panel.style.display='none';
+}
+
+function escapeHtml(v){
+  return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function clearExerciseFields(){
+  selected=null;
+  editingDraftIndex=null;
+  document.getElementById('search').value='';
+  document.getElementById('preview').style.display='none';
+  document.getElementById('reps').value='';
+  document.getElementById('tempo').value='';
+  document.getElementById('load').value='';
+  updateBuilderButtons();
+}
+
+function resetBuilderFields(){
+  blockDraft=[];
+  editingDraftIndex=null;
+  document.getElementById('series').value='3';
+  document.getElementById('trainerNote').value='';
+  document.getElementById('superExerciseCount').value='2';
+  document.getElementById('superRounds').value='3';
+  document.getElementById('superNote').value='';
+  setBlockMode('INDIVIDUAL',true);
+  clearExerciseFields();
+}
+
+function closeEditor(rerender=false){
+  parkEditor();
+  editorDirty=false;
+  editorContext=null;
+  editingBlockIndex=null;
+  blockDraft=[];
+  editingDraftIndex=null;
+  if(rerender) renderWorkspace();
+}
+
+function markEditorDirty(){
+  if(!editorContext) return;
+  editorDirty=true;
+  updateBuilderButtons();
+}
+
+function populateSuperExerciseOptions(){
+  // Las sugerencias de superserie se generan por campo y muestran solo nombres de ejercicios.
+}
+
+function cardResultsForSuperInput(input){
+  return input.closest('.search-wrap')?.querySelector('.super-results') || null;
+}
+
+function renderSuperNameResults(box, query, index, input){
+  if(!box) return;
+  const q=norm(String(query||'').trim());
+  box.innerHTML='';
+  if(!q){
+    box.style.display='none';
+    return;
+  }
+
+  const matches=exercises
+    .filter(ex=>norm(ex.ejercicio||'').includes(q))
+    .slice(0,8);
+
+  if(!matches.length){
+    box.innerHTML='<div class="result small">No encontré ejercicios.</div>';
+    box.style.display='block';
+    return;
+  }
+
+  matches.forEach(ex=>{
+    const row=document.createElement('div');
+    row.className='result';
+    row.textContent=ex.ejercicio;
+    row.addEventListener('mousedown',e=>e.preventDefault());
+    row.addEventListener('click',()=>{
+      input.value=ex.ejercicio;
+      blockDraft[index].ejercicio=ex.ejercicio;
+      blockDraft[index].id_ejercicio=ex.id_ejercicio||'';
+      box.style.display='none';
+      markEditorDirty();
+      updateBuilderButtons();
+    });
+    box.appendChild(row);
+  });
+  box.style.display='block';
+}
+
+function renderSuperExerciseFields(){
+  const count=Math.max(2,Math.min(5,Number(document.getElementById('superExerciseCount').value)||2));
+  const box=document.getElementById('superExercisesContainer');
+  if(!box) return;
+
+  while(blockDraft.length<count) blockDraft.push({id_ejercicio:'',ejercicio:'',reps:'',tempo:'',load:''});
+  if(blockDraft.length>count) blockDraft=blockDraft.slice(0,count);
+
+  box.innerHTML='';
+  blockDraft.forEach((ex,i)=>{
+    const card=document.createElement('div');
+    card.className='super-ex-card';
+    card.innerHTML=`
+      <div class="super-ex-title">Ejercicio ${i+1}</div>
+      <label>Seleccionar ejercicio</label>
+      <div class="search-wrap">
+        <input class="super-name" data-i="${i}" value="${escapeHtml(ex.ejercicio||'')}" placeholder="Buscar en biblioteca…" autocomplete="off">
+        <div class="results super-results" data-i="${i}"></div>
+      </div>
+      <div class="super-ex-grid">
+        <div>
+          <label>Repeticiones</label>
+          <input class="super-reps" data-i="${i}" value="${escapeHtml(ex.reps||'')}" placeholder="Ej.: 8-12">
+        </div>
+        <div>
+          <label>Tempo</label>
+          <input class="super-tempo" data-i="${i}" inputmode="numeric" pattern="[0-9]*" value="${escapeHtml(ex.tempo||'')}" placeholder="Ej.: 3010">
+        </div>
+        <div>
+          <label>Carga inicial</label>
+          <input class="super-load" data-i="${i}" value="${escapeHtml(ex.load||'')}" placeholder="Ej.: 20 kg">
+        </div>
+      </div>`;
+    box.appendChild(card);
+  });
+
+  box.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input',()=>{
+      const i=Number(inp.dataset.i);
+      if(inp.classList.contains('super-name')){
+        const name=inp.value.trim();
+        const lib=exercises.find(x=>String(x.ejercicio||'').trim().toLowerCase()===name.toLowerCase());
+        blockDraft[i].ejercicio=name;
+        blockDraft[i].id_ejercicio=lib?.id_ejercicio||'';
+
+        const resultsBox=cardResultsForSuperInput(inp);
+        renderSuperNameResults(resultsBox, name, i, inp);
+      }else if(inp.classList.contains('super-reps')) blockDraft[i].reps=inp.value.trim();
+      else if(inp.classList.contains('super-tempo')) blockDraft[i].tempo=inp.value.trim();
+      else if(inp.classList.contains('super-load')) blockDraft[i].load=inp.value.trim();
+      markEditorDirty();
+    });
+    inp.addEventListener('focus',()=>{
+      if(inp.classList.contains('super-name')){
+        const i=Number(inp.dataset.i);
+        const resultsBox=cardResultsForSuperInput(inp);
+        renderSuperNameResults(resultsBox, inp.value.trim(), i, inp);
+      }
+    });
+    inp.addEventListener('change',()=>{
+      const i=Number(inp.dataset.i);
+      if(inp.classList.contains('super-name')){
+        const name=inp.value.trim();
+        const lib=exercises.find(x=>String(x.ejercicio||'').trim().toLowerCase()===name.toLowerCase());
+        blockDraft[i].ejercicio=name;
+        blockDraft[i].id_ejercicio=lib?.id_ejercicio||'';
+      }
+      markEditorDirty();
+    });
+  });
+  updateBuilderButtons();
+}
+
+function setBlockMode(mode, keepDraft=false){
+  blockMode=mode==='COMBINADO'?'COMBINADO':'INDIVIDUAL';
+  document.getElementById('individualTypeBtn').classList.toggle('active',blockMode==='INDIVIDUAL');
+  document.getElementById('combinedTypeBtn').classList.toggle('active',blockMode==='COMBINADO');
+  document.getElementById('individualEditorSection').style.display=blockMode==='INDIVIDUAL'?'block':'none';
+  document.getElementById('superEditorSection').style.display=blockMode==='COMBINADO'?'block':'none';
+
+  if(blockMode==='COMBINADO'){
+    if(!keepDraft || blockDraft.length<2){
+      const count=Number(document.getElementById('superExerciseCount').value)||2;
+      blockDraft=Array.from({length:count},()=>({id_ejercicio:'',ejercicio:'',reps:'',tempo:'',load:''}));
+    }
+    populateSuperExerciseOptions();
+    renderSuperExerciseFields();
+  }else if(!keepDraft){
+    blockDraft=[];
+  }
+  updateBuilderButtons();
+}
+
+function updateBuilderButtons(){
+  const add=document.getElementById('addBtn');
+  if(blockMode==='INDIVIDUAL'){
+    add.textContent=editingBlockIndex===null?'Agregar ejercicio':'Guardar cambios';
+    const noChanges=editingBlockIndex!==null && !editorDirty;
+    add.disabled=noChanges;
+    add.classList.toggle('editor-save-disabled',noChanges);
+  }else{
+    add.textContent=editingBlockIndex===null?'Agregar superserie':'Guardar cambios';
+    const valid=blockDraft.length>=2 && blockDraft.every(ex=>ex.id_ejercicio && ex.ejercicio);
+    const noChanges=editingBlockIndex!==null && !editorDirty;
+    add.disabled=!valid || noChanges;
+    add.classList.toggle('editor-save-disabled',!valid || noChanges);
+  }
+}
+
+function renderDraft(){
+  if(blockMode==='COMBINADO') renderSuperExerciseFields();
+}
+
+function editDraftExercise(i){}
+
+
+async function openEditor(day,index=null){
+  if(pendingReorderDays.has(day)){
+    const ok=await flushPendingDay(day);
+    if(ok===false) return;
+  }
+  collapsedDays.delete(day);
+  if(!document.getElementById('day-body-'+day)) renderWorkspace();
+
+  editorContext={day,index};
+  editingBlockIndex=index;
+  editorDirty=(index===null);
+  resetBuilderFields();
+
+  const panel=document.getElementById('editorPanel');
+  const typeSection=document.getElementById('typeSection');
+  const searchSection=document.getElementById('exerciseSelectSection');
+  const lockedBox=document.getElementById('lockedExerciseBox');
+  const lockedName=document.getElementById('lockedExerciseName');
+
+  typeSection.style.display=index===null?'block':'none';
+  lockedBox.style.display='none';
+  searchSection.style.display='block';
+
+  if(index===null){
+    document.getElementById('editorTitle').textContent='Agregar en '+dayTitle(day);
+  }else{
+    const block=routines[day][index];
+    blockDraft=block.exercises.map(x=>({...x}));
+    setBlockMode(block.tipo_bloque,true);
+
+    if(block.tipo_bloque==='INDIVIDUAL' && blockDraft[0]){
+      const ex=blockDraft[0];
+      selected={id_ejercicio:ex.id_ejercicio,ejercicio:ex.ejercicio};
+      document.getElementById('editorTitle').textContent=ex.ejercicio;
+      lockedName.textContent=ex.ejercicio;
+      lockedBox.style.display='block';
+      searchSection.style.display='none';
+      document.getElementById('series').value=block.series||'3';
+      document.getElementById('trainerNote').value=block.nota_entrenador||'';
+      document.getElementById('reps').value=ex.reps||'';
+      document.getElementById('tempo').value=ex.tempo||'';
+      document.getElementById('load').value=ex.load||'';
+    }else{
+      document.getElementById('editorTitle').textContent='Superserie';
+      document.getElementById('superExerciseCount').value=String(Math.max(2,Math.min(5,block.exercises.length)));
+      document.getElementById('superRounds').value=block.series||'3';
+      document.getElementById('superNote').value=block.nota_entrenador||'';
+      renderSuperExerciseFields();
+    }
+
+    editorDirty=false;
+    updateBuilderButtons();
+  }
+
+  const slot=document.getElementById(index===null?'day-add-slot-'+day:'day-edit-slot-'+day+'-'+index);
+  if(slot){
+    slot.appendChild(panel);
+    panel.style.display='block';
+    setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),30);
+  }
+  updateBuilderButtons();
+}
+function currentExerciseEntry(){
+  if(!selected){alert('Primero seleccioná un ejercicio de la biblioteca.');return null;}
+  return {
+    id_ejercicio:selected.id_ejercicio,
+    ejercicio:selected.ejercicio,
+    reps:document.getElementById('reps').value.trim(),
+    tempo:document.getElementById('tempo').value.trim(),
+    load:document.getElementById('load').value.trim()
+  };
+}
+
+function moveBlock(day,i,dir){
+  if(savingDays.has(day)) return;
+  const list=routines[day];
+  const j=i+dir;
+  if(j<0||j>=list.length) return;
+  [list[i],list[j]]=[list[j],list[i]];
+  closeEditor(false);
+  scheduleReorderSave(day);
+}
+
+async function removeBlock(day,i){
+  if(savingDays.has(day)) return;
+  if(pendingReorderDays.has(day)){
+    const ok=await flushPendingDay(day);
+    if(ok===false) return;
+  }
+  if(routines[day].length===1){
+    if(!confirm('Este es el último ejercicio de '+dayTitle(day)+'. Si lo quitás, también se eliminará el día/bloque. ¿Continuar?')) return;
+    await deleteDay(day,true);
+    return;
+  }
+  if(!confirm('¿Quitar este elemento de '+dayTitle(day)+'?')) return;
+  routines[day].splice(i,1);
+  closeEditor(false);
+  await commitDay(day);
+}
+
+function summaryForDay(day){
+  const blocks=routines[day]||[];
+  const exercises=blocks.reduce((n,b)=>n+b.exercises.length,0);
+  const supers=blocks.filter(b=>b.tipo_bloque==='COMBINADO').length;
+  return exercises+' ejercicio'+(exercises===1?'':'s')+(supers?' · '+supers+' superserie'+(supers===1?'':'s'):'');
+}
+
+function renderWorkspace(){
+  parkEditor();
+  const workspace=document.getElementById('routineWorkspace');
+  const token=document.getElementById('student').value;
+  const globalIndicator=document.getElementById('routineSaveIndicator');
+  if(globalIndicator){
+    const isSaving=savingDays.size>0 || routineMetaSaving;
+    const isPending=pendingReorderDays.size>0;
+    globalIndicator.textContent=isSaving?'Guardando…':(isPending?'Cambios pendientes…':'✓ Rutina guardada');
+    globalIndicator.classList.toggle('saving',isSaving);
+    globalIndicator.classList.toggle('pending',!isSaving && isPending);
+  }
+  if(!token){
+    workspace.innerHTML='<div class="empty">Seleccioná una alumna.</div>';
+    document.getElementById('weekSummary').textContent='';
+    document.getElementById('studentObjective').textContent='';
+    return;
+  }
+
+  visibleDays=DAY_ORDER.filter(d=>visibleDays.includes(d) || routines[d].length);
+
+  const currentStudent=allKnownStudents().find(s=>String(s.token||'').trim()===token);
+  const objective=String(currentStudent?.objetivo_principal||'').trim();
+  document.getElementById('studentObjective').textContent=objective?'Objetivo: '+objective:'';
+  document.getElementById('weekSummary').textContent=
+    visibleDays.length+' día'+(visibleDays.length===1?'':'s')+'/semana';
+
+  workspace.innerHTML='';
+  if(!visibleDays.length){
+    workspace.innerHTML='<div class="empty">Todavía no hay días o bloques cargados.</div>';
+  }
+
+  visibleDays.forEach(day=>{
+    const card=document.createElement('section');
+    card.className='day-card'+(collapsedDays.has(day)?' collapsed':'');
+    card.id='day-card-'+day;
+
+    const head=document.createElement('div'); head.className='day-head';
+    const left=document.createElement('div'); left.className='day-head-left';
+    left.innerHTML='<div><div class="day-name">'+dayTitle(day)+'</div><div class="day-meta">'+summaryForDay(day)+'</div></div>';
+
+    const ha=document.createElement('div'); ha.className='day-head-actions';
+    const rename=document.createElement('button'); rename.className='mini'; rename.textContent='Cambiar nombre'; rename.disabled=savingDays.has(day); rename.onclick=()=>openRenameDay(day);
+    const toggle=document.createElement('button'); toggle.className='mini'; toggle.textContent=collapsedDays.has(day)?'▼':'▲';
+    toggle.title=collapsedDays.has(day)?'Desplegar':'Retraer';
+    toggle.onclick=()=>{
+      if(collapsedDays.has(day)) collapsedDays.delete(day); else collapsedDays.add(day);
+      if(editorContext?.day===day) closeEditor(false);
+      renderWorkspace();
+    };
+    ha.append(rename,toggle); head.append(left,ha); card.appendChild(head);
+
+    const body=document.createElement('div'); body.className='day-body'; body.id='day-body-'+day;
+    const list=document.createElement('div'); list.className='day-list';
+
+    if(!routines[day].length){
+      list.innerHTML='<div class="empty">Todavía no hay ejercicios en este día.</div>';
+    }else{
+      routines[day].forEach((block,i)=>{
+        const row=document.createElement('div'); row.className='routine-row'+(block.tipo_bloque==='COMBINADO'?' combined':'');
+        const main=document.createElement('div'); main.className='routine-main';
+        if(block.tipo_bloque==='COMBINADO'){
+          const exs=block.exercises.map((e,j)=>(j+1)+'. '+e.ejercicio+' · '+(e.reps||'—')+' reps').join('<br>');
+          main.innerHTML='<div class="routine-title">Superserie · '+block.exercises.length+' ejercicios · '+block.series+' vueltas</div><div class="routine-sub">'+exs+'</div>'+(block.nota_entrenador?'<div class="routine-note">📝 '+block.nota_entrenador+'</div>':'');
+        }else{
+          const e=block.exercises[0]||{};
+          main.innerHTML='<div class="routine-title">'+(e.ejercicio||'Ejercicio')+'</div><div class="routine-sub">'+block.series+' series · '+(e.reps||'—')+' reps · tempo '+(e.tempo||'—')+(e.load?' · '+e.load:'')+'</div>'+(block.nota_entrenador?'<div class="routine-note">📝 '+block.nota_entrenador+'</div>':'');
+        }
+
+        const actions=document.createElement('div'); actions.className='routine-actions';
+        const up=document.createElement('button'); up.className='mini'; up.textContent='↑'; up.disabled=i===0 || savingDays.has(day); up.onclick=()=>moveBlock(day,i,-1);
+        const down=document.createElement('button'); down.className='mini'; down.textContent='↓'; down.disabled=i===routines[day].length-1 || savingDays.has(day); down.onclick=()=>moveBlock(day,i,1);
+        const edit=document.createElement('button'); edit.className='mini'; edit.textContent='Editar'; edit.disabled=savingDays.has(day); edit.onclick=()=>openEditor(day,i);
+        const del=document.createElement('button'); del.className='mini danger'; del.textContent='Quitar'; del.disabled=savingDays.has(day); del.onclick=()=>removeBlock(day,i);
+        actions.append(up,down,edit,del);
+        row.append(main,actions);
+        list.appendChild(row);
+
+        const slot=document.createElement('div'); slot.id='day-edit-slot-'+day+'-'+i; list.appendChild(slot);
+      });
+    }
+
+    body.appendChild(list);
+
+    const addSlot=document.createElement('div'); addSlot.id='day-add-slot-'+day;
+    body.appendChild(addSlot);
+
+    const footer=document.createElement('div'); footer.className='day-footer';
+    const leftFooter=document.createElement('div'); leftFooter.className='day-footer-left';
+    const add=document.createElement('button'); add.className='secondary day-add-btn'; add.textContent='＋ Agregar E/S';
+    add.title='Agregar ejercicio o superserie';
+    add.disabled=savingDays.has(day);
+    add.onclick=()=>openEditor(day,null);
+    const status=document.createElement('div'); status.className='save-status'; status.id='saveStatus-'+day;
+    status.textContent=saveState[day]||'';
+    if(saveState[day]==='✓ Guardado') status.classList.add('success');
+    if(saveState[day] && saveState[day].startsWith('Error')) status.classList.add('danger-text');
+    leftFooter.append(add,status);
+    const deleteDayBtn=document.createElement('button'); deleteDayBtn.className='day-delete-btn'; deleteDayBtn.type='button';
+    deleteDayBtn.textContent='Eliminar día/bloque';
+    deleteDayBtn.disabled=savingDays.has(day);
+    deleteDayBtn.onclick=()=>deleteDay(day);
+    footer.append(leftFooter,deleteDayBtn); body.appendChild(footer);
+
+    card.appendChild(body); workspace.appendChild(card);
+  });
+
+  const next=DAY_ORDER.find(d=>!visibleDays.includes(d));
+  const addDay=document.getElementById('addDayBtn');
+  addDay.disabled=!next;
+  addDay.textContent=next?'＋ Agregar día':'Máximo 6 días';
+}
+
+async function openRenameDay(day){
+  if(pendingReorderDays.has(day)){
+    const ok=await flushPendingDay(day);
+    if(ok===false) return;
+  }
+  renamingDay=day;
+  const cfg=dayLabels[day]||{type:'DIA',name:''};
+  document.getElementById('dayLabelType').value=cfg.type||'DIA';
+  document.getElementById('dayLabelName').value=cfg.name||'';
+  openModalById('renameDayModal');
+  setTimeout(()=>document.getElementById('dayLabelName').focus(),50);
+}
+document.getElementById('closeRenameDayModal').onclick=()=>closeModalById('renameDayModal');
+document.getElementById('cancelRenameDayBtn').onclick=()=>closeModalById('renameDayModal');
+document.getElementById('saveRenameDayBtn').onclick=async()=>{
+  if(!renamingDay) return;
+  const day=renamingDay;
+  const name=document.getElementById('dayLabelName').value.trim();
+  const type=document.getElementById('dayLabelType').value;
+  const btn=document.getElementById('saveRenameDayBtn');
+  const original=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='Guardando…';
+  routineMetaSaving=true;
+  renderWorkspace();
+  try{
+    await persistDayLabel(day,type,name);
+    if(name) dayLabels[day]={type,name}; else delete dayLabels[day];
+    closeModalById('renameDayModal');
+    renderWorkspace();
+  }catch(e){
+    alert('No se pudo guardar el nombre del día.');
+  }finally{
+    routineMetaSaving=false;
+    btn.disabled=false;
+    btn.textContent=original;
+    renderWorkspace();
+  }
+};
+
+document.getElementById('addDayBtn').onclick=async()=>{
+  const ok=await flushAllPending();
+  if(ok===false) return;
+  const next=DAY_ORDER.find(d=>!visibleDays.includes(d));
+  if(!next){alert('Ya están visibles los 6 días disponibles.');return;}
+  visibleDays.push(next); visibleDays.sort((a,b)=>DAY_ORDER.indexOf(a)-DAY_ORDER.indexOf(b));
+  collapsedDays.delete(next);
+  renderWorkspace();
+  openEditor(next,null);
+};
+
+document.getElementById('individualTypeBtn').onclick=()=>{
+  if(blockMode==='INDIVIDUAL') return;
+  setBlockMode('INDIVIDUAL');
+  clearExerciseFields();
+  markEditorDirty();
+};
+document.getElementById('combinedTypeBtn').onclick=()=>{
+  if(blockMode==='COMBINADO') return;
+  setBlockMode('COMBINADO');
+  markEditorDirty();
+};
+document.getElementById('closeEditorBtn').onclick=()=>closeEditor(true);
+document.getElementById('cancelEditBtn').onclick=()=>closeEditor(true);
+
+document.getElementById('search').addEventListener('input',e=>{
+  const q=norm(e.target.value.trim());
+  selected=null;
+  document.getElementById('preview').style.display='none';
+  if(!q){document.getElementById('results').style.display='none';return;}
+  renderResults(exercises.filter(ex=>norm(ex.ejercicio).includes(q)));
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search-wrap')){
+    document.getElementById('results').style.display='none';
+    document.querySelectorAll('.super-results').forEach(box=>box.style.display='none');
+  }
+});
+
+document.getElementById('superExerciseCount').addEventListener('change',()=>{
+  const newCount=Number(document.getElementById('superExerciseCount').value)||2;
+  if(newCount<blockDraft.length){
+    const removed=blockDraft.slice(newCount);
+    const hasData=removed.some(x=>x.ejercicio||x.reps||x.tempo||x.load);
+    if(hasData && !confirm('Al reducir la cantidad se eliminarán los ejercicios sobrantes. ¿Continuar?')){
+      document.getElementById('superExerciseCount').value=String(blockDraft.length);
+      return;
+    }
+  }
+  while(blockDraft.length<newCount) blockDraft.push({id_ejercicio:'',ejercicio:'',reps:'',tempo:'',load:''});
+  blockDraft=blockDraft.slice(0,newCount);
+  markEditorDirty();
+  renderSuperExerciseFields();
+});
+['superRounds','superNote'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>markEditorDirty());
+  document.getElementById(id).addEventListener('change',()=>markEditorDirty());
+});
+
+['series','trainerNote','reps','tempo','load'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){
+    el.addEventListener('input',()=>{
+      if(editingBlockIndex!==null) markEditorDirty();
+    });
+    el.addEventListener('change',()=>{
+      if(editingBlockIndex!==null) markEditorDirty();
+    });
+  }
+});
+
+document.getElementById('addBtn').onclick=async()=>{
+  const day=currentDay();
+
+  if(blockMode==='INDIVIDUAL'){
+    const ex=currentExerciseEntry();
+    if(!ex) return;
+    const block={
+      bloque_id:editingBlockIndex!==null ? routines[day][editingBlockIndex].bloque_id : makeBlockId(day),
+      tipo_bloque:'INDIVIDUAL',
+      series:document.getElementById('series').value||'3',
+      nota_entrenador:document.getElementById('trainerNote').value.trim(),
+      exercises:[ex]
+    };
+    if(editingBlockIndex===null) routines[day].push(block);
+    else routines[day][editingBlockIndex]=block;
+    closeEditor(false);
+    await commitDay(day);
+    return;
+  }
+
+  // Superserie: toda la estructura se confirma de una vez.
+  const count=Number(document.getElementById('superExerciseCount').value)||2;
+  if(blockDraft.length!==count){ renderSuperExerciseFields(); return; }
+
+  // Resolver IDs desde la biblioteca y validar.
+  blockDraft=blockDraft.map(ex=>{
+    const lib=exercises.find(x=>String(x.ejercicio||'').trim().toLowerCase()===String(ex.ejercicio||'').trim().toLowerCase());
+    return {...ex,id_ejercicio:lib?.id_ejercicio||ex.id_ejercicio||''};
+  });
+  if(blockDraft.some(ex=>!ex.ejercicio || !ex.id_ejercicio)){
+    alert('Seleccioná un ejercicio válido de la biblioteca en cada posición.');
+    return;
+  }
+
+  const block={
+    bloque_id:editingBlockIndex!==null ? routines[day][editingBlockIndex].bloque_id : makeBlockId(day),
+    tipo_bloque:'COMBINADO',
+    series:document.getElementById('superRounds').value||'3',
+    nota_entrenador:document.getElementById('superNote').value.trim(),
+    exercises:blockDraft.map(x=>({...x}))
+  };
+  if(editingBlockIndex===null) routines[day].push(block);
+  else routines[day][editingBlockIndex]=block;
+  closeEditor(false);
+  await commitDay(day);
+};
+document.getElementById('finishBlockBtn').onclick=()=>{};
+
+document.getElementById('student').addEventListener('change',async(e)=>{
+  const newToken=e.target.value;
+  if(loadedStudentToken && newToken!==loadedStudentToken){
+    // Volvemos temporalmente al token cargado para guardar con la identidad correcta.
+    e.target.value=loadedStudentToken;
+    const ok=await flushAllPending();
+    if(ok===false){
+      alert('No se pudo completar un guardado pendiente. Seguí en la alumna actual y volvé a intentar.');
+      return;
+    }
+    e.target.value=newToken;
+  }
+  loadCurrentRoutinesForStudent();
+});
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function makeVersionId(token,day){
+  const d=new Date();
+  const stamp=d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())+pad2(d.getSeconds());
+  return token+'_'+day+'_'+stamp;
+}
+function sleep(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
+
+async function submitRoutineRow(ex, block, token, day, versionId, flatOrder, blockOrder, innerOrder){
+  document.getElementById('sfToken').value=token;
+  document.getElementById('sfDia').value=day;
+  document.getElementById('sfVersion').value=versionId;
+  document.getElementById('sfOrden').value=flatOrder;
+  document.getElementById('sfIdEjercicio').value=ex.id_ejercicio||'';
+  document.getElementById('sfEjercicio').value=ex.ejercicio||'';
+  document.getElementById('sfSeries').value=block.series||'';
+  document.getElementById('sfReps').value=ex.reps||'';
+  document.getElementById('sfTempo').value=ex.tempo||'';
+  document.getElementById('sfCargaInicial').value=ex.load||'';
+  document.getElementById('sfNotaEntrenador').value=block.nota_entrenador||'';
+  document.getElementById('sfBloqueId').value=block.bloque_id||'';
+  document.getElementById('sfTipoBloque').value=block.tipo_bloque||'INDIVIDUAL';
+  document.getElementById('sfOrdenBloque').value=blockOrder;
+  document.getElementById('sfOrdenEnBloque').value=innerOrder;
+  document.getElementById('saveForm').submit();
+  await sleep(450);
+}
+
+async function submitDayDeletion(token,day,versionId){
+  document.getElementById('sfToken').value=token;
+  document.getElementById('sfDia').value=day;
+  document.getElementById('sfVersion').value=versionId;
+  document.getElementById('sfOrden').value='1';
+  document.getElementById('sfIdEjercicio').value='__DAY_DELETED__';
+  document.getElementById('sfEjercicio').value='';
+  document.getElementById('sfSeries').value='';
+  document.getElementById('sfReps').value='';
+  document.getElementById('sfTempo').value='';
+  document.getElementById('sfCargaInicial').value='';
+  document.getElementById('sfNotaEntrenador').value='';
+  document.getElementById('sfBloqueId').value='__DAY_DELETED__';
+  document.getElementById('sfTipoBloque').value='ELIMINADO';
+  document.getElementById('sfOrdenBloque').value='1';
+  document.getElementById('sfOrdenEnBloque').value='1';
+  document.getElementById('saveForm').submit();
+  await sleep(500);
+}
+
+async function deleteDay(day,alreadyConfirmed=false){
+  if(savingDays.has(day)) return false;
+  if(pendingReorderDays.has(day)){
+    const ok=await flushPendingDay(day);
+    if(ok===false) return false;
+  }
+  const title=dayTitle(day);
+  if(!alreadyConfirmed && !confirm('¿Eliminar '+title+' completo? Se quitarán todos los ejercicios de este día/bloque.')) return false;
+
+  const token=loadedStudentToken || document.getElementById('student').value;
+  const hadSavedContent=(routines[day]||[]).length>0;
+  savingDays.add(day);
+  saveState[day]='Eliminando…';
+  renderWorkspace();
+
+  try{
+    if(hadSavedContent){
+      const versionId=makeVersionId(token,day);
+      await submitDayDeletion(token,day,versionId);
+    }
+
+    currentRows=currentRows.filter(r=>!(
+      String(r.token||'').trim()===token &&
+      String(r.dia||'').trim().toUpperCase()===day
+    ));
+    routines[day]=[];
+    delete savedDaySignatures[day];
+    cancelReorderTimer(day);
+    pendingReorderDays.delete(day);
+    visibleDays=visibleDays.filter(d=>d!==day);
+    collapsedDays.delete(day);
+    closeEditor(false);
+
+    // También limpiamos el nombre visible para que, si el día se crea de nuevo,
+    // vuelva a empezar con su nombre predeterminado.
+    try{
+      await persistDayLabel(day,'DIA','');
+      delete dayLabels[day];
+    }catch(e){}
+
+    delete saveState[day];
+    return true;
+  }catch(e){
+    saveState[day]='Error al eliminar';
+    return false;
+  }finally{
+    savingDays.delete(day);
+    renderWorkspace();
+  }
+}
+
+async function commitDay(day){
+  if(savingDays.has(day)) return false;
+  const blocks=routines[day];
+  if(!blocks.length) return false;
+
+  cancelReorderTimer(day);
+  pendingReorderDays.delete(day);
+
+  const currentSignature=daySignature(day);
+  if(savedDaySignatures[day]===currentSignature){
+    saveState[day]='✓ Sin cambios';
+    renderWorkspace();
+    setTimeout(()=>{
+      if(saveState[day]==='✓ Sin cambios'){
+        saveState[day]='';
+        renderWorkspace();
+      }
+    },1200);
+    return true;
+  }
+
+  const token=loadedStudentToken || document.getElementById('student').value;
+  const versionId=makeVersionId(token,day);
+  savingDays.add(day);
+  saveState[day]='Guardando…';
+  renderWorkspace();
+
+  const total=blocks.reduce((n,b)=>n+b.exercises.length,0);
+  let flatOrder=0;
+  try{
+    for(let bi=0;bi<blocks.length;bi++){
+      const block=blocks[bi];
+      for(let ei=0;ei<block.exercises.length;ei++){
+        flatOrder++;
+        await submitRoutineRow(block.exercises[ei],block,token,day,versionId,flatOrder,bi+1,ei+1);
+      }
+    }
+
+    currentRows=currentRows.filter(r=>!(String(r.token||'').trim()===token && String(r.dia||'').trim().toUpperCase()===day));
+    blocks.forEach((block,bi)=>block.exercises.forEach((ex,ei)=>currentRows.push({
+      token,dia:day,version_id:versionId,orden:String(ei+1),
+      id_ejercicio:ex.id_ejercicio,ejercicio:ex.ejercicio,series:block.series,reps:ex.reps,tempo:ex.tempo,
+      carga_inicial:ex.load,nota_entrenador:block.nota_entrenador,bloque_id:block.bloque_id,tipo_bloque:block.tipo_bloque,
+      orden_bloque:String(bi+1),orden_en_bloque:String(ei+1)
+    })));
+
+    savedDaySignatures[day]=currentSignature;
+    dirtyDays.delete(day);
+    saveState[day]='✓ Guardado';
+    return true;
+  }catch(e){
+    saveState[day]='Error al guardar';
+    return false;
+  }finally{
+    savingDays.delete(day);
+    renderWorkspace();
+    if(saveState[day]==='✓ Guardado'){
+      setTimeout(()=>{
+        if(saveState[day]==='✓ Guardado'){
+          saveState[day]='';
+          renderWorkspace();
+        }
+      },1800);
+    }
+  }
+}
+(async()=>{
+  try{
+    const bust='&t='+Date.now();
+    const [exRes, currentRes, studentsRes, newStudentsRes, stateRes, dayNamesRes]=await Promise.all([
+      fetch(CSV_URL+bust,{cache:'no-store'}),
+      fetch(CURRENT_ROUTINES_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENT_STATE_CSV+bust,{cache:'no-store'}),
+      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'})
+    ]);
+
+    exercises=parseCSV(await exRes.text()).filter(x=>x.ejercicio);
+    currentRows=parseCSV(await currentRes.text()).filter(x=>x.token && x.dia && x.ejercicio);
+    const baseStudents=parseCSV(await studentsRes.text());
+    const createdStudents=parseCSV(await newStudentsRes.text()).map(s=>({
+      ...s,
+      activo: String(s.activo||'').trim() || 'TRUE'
+    }));
+    students=[...baseStudents,...createdStudents];
+    studentStates=parseCSV(await stateRes.text());
+    dayNameRows=parseCSV(await dayNamesRes.text());
+
+    populateStudents();
+
+    if(document.getElementById('student').value){
+      loadCurrentRoutinesForStudent();
+    }else{
+      renderWorkspace();
+    }
+  }catch(e){
+    alert('No se pudo cargar alumnas, biblioteca o rutina vigente.');
+    renderWorkspace();
+  }
+})();
+</script>
+</body>
+</html>
