@@ -243,7 +243,7 @@ input,select,textarea{border-color:#D2C2D8!important}
           </div>
           <div>
             <label>Tempo</label>
-            <input id="tempo" inputmode="numeric" pattern="[0-9]*" placeholder="Ej.: 3010">
+            <input id="tempo" type="text" inputmode="text" autocapitalize="characters" placeholder="Ej.: 3010 / X1">
           </div>
           <div>
             <label>Carga inicial</label>
@@ -1074,7 +1074,7 @@ function renderSuperExerciseFields(){
         </div>
         <div>
           <label>Tempo</label>
-          <input class="super-tempo" data-i="${i}" inputmode="numeric" pattern="[0-9]*" value="${escapeHtml(ex.tempo||'')}" placeholder="Ej.: 3010">
+          <input class="super-tempo" data-i="${i}" type="text" inputmode="text" autocapitalize="characters" value="${escapeHtml(ex.tempo||'')}" placeholder="Ej.: 3010 / X1">
         </div>
         <div>
           <label>Carga inicial</label>
