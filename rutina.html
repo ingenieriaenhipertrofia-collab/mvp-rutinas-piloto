@@ -291,6 +291,7 @@ a{
 
 <script>
 const ROUTINES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1Beg305Pe0JKkMFCj-cKmyKxICGc4HnCUMy7aJQisCj2l0QgQG29ax30eBe7_eH8glAA6xjpweyGV/pub?gid=1251455005&single=true&output=csv';
+const ROUTINES_API = 'https://script.google.com/macros/s/AKfycby3MDDLPFN-AdYnTsk3xyfDopG3nAEGOpV_zl79_L-IQjPNi5bfPyUkhgbd4xFx01Lp/exec';
 const EXERCISES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=41200741&single=true&output=csv';
 const DAY_NAMES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS11sMy65gbqqSlGGatOa1lS2TUbETHQmQ3Qju0OMT8dmo3pXwO5PRTpzjJ13AIV1g1vHRChaSxlkHP/pub?gid=1912648114&single=true&output=csv';
 const STUDENTS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=1888921254&single=true&output=csv';
@@ -457,6 +458,35 @@ function renderRoutine(rows,labels){
       </section>`;
   }).join('');
 }
+
+async function loadRoutineRowsFast(){
+  // Fuente principal: Apps Script leyendo directamente DB02.
+  try{
+    const sep=ROUTINES_API.includes('?')?'&':'?';
+    const res=await fetch(ROUTINES_API+sep+'t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    if(!data || data.ok!==true || !Array.isArray(data.rows)){
+      throw new Error(data && data.error ? data.error : 'Respuesta inválida de la API');
+    }
+
+    // Normalizamos claves por seguridad para que coincidan con el resto de la app.
+    return data.rows.map(row=>{
+      const out={};
+      Object.entries(row||{}).forEach(([k,v])=>out[normalizeHeader(k)]=String(v??'').trim());
+      return out;
+    });
+  }catch(e){
+    console.warn('API directa no disponible; usando CSV publicado como respaldo.',e);
+
+    // Respaldo: la fuente anterior sigue disponible.
+    const bust='&t='+Date.now();
+    const res=await fetch(ROUTINES_CSV+bust,{cache:'no-store'});
+    if(!res.ok) throw new Error('No se pudo cargar la rutina.');
+    return parseCSV(await res.text());
+  }
+}
+
 (async()=>{
   const loading=document.getElementById('loading');
   try{
@@ -464,20 +494,19 @@ function renderRoutine(rows,labels){
     if(!token) throw new Error('Falta el token de la rutina.');
 
     const bust='&t='+Date.now();
-    const [routineRes,libRes,namesRes,studentsRes,newStudentsRes]=await Promise.all([
-      fetch(ROUTINES_CSV+bust,{cache:'no-store'}),
+    const [allRoutineRows,libRes,namesRes,studentsRes,newStudentsRes]=await Promise.all([
+      loadRoutineRowsFast(),
       fetch(EXERCISES_CSV+bust,{cache:'no-store'}),
       fetch(DAY_NAMES_CSV+bust,{cache:'no-store'}),
       fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
       fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'})
     ]);
-    const routineText=await routineRes.text();
     const libText=await libRes.text();
     const namesText=await namesRes.text();
     const studentsText=await studentsRes.text();
     const newStudentsText=await newStudentsRes.text();
 
-    const routineRows=parseCSV(routineText)
+    const routineRows=allRoutineRows
       .filter(r=>String(r.token||'').trim()===token && r.dia && r.ejercicio);
     if(!routineRows.length) throw new Error('No hay una rutina vigente para este enlace.');
 
