@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Constructor de rutina · Prueba</title>
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--ink:#15171a;--muted:#6b7280;--line:#E7DADF;--soft:#f9fafb}
+:root{--bg:#f5f6f8;--card:#fff;--ink:#15171a;--muted:#6b7280;--line:#e5e7eb;--soft:#f9fafb}
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-.header{background:#3A2A32;color:#fff;padding:22px 18px}
+.header{background:#111827;color:#fff;padding:22px 18px}
 .header h1{margin:0;font-size:22px}.header p{margin:5px 0 0;opacity:.75;font-size:14px}
 .wrap{max-width:860px;margin:28px auto;padding:0 16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,.04);margin-bottom:18px}
@@ -26,14 +26,14 @@ textarea{min-height:88px;resize:vertical}
 .exercise-preview b{display:block;margin-bottom:4px}
 .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
 button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}
-.primary{background:#3A2A32;color:white}.secondary{background:#eef0f3;color:#3A2A32}
+.primary{background:#111827;color:white}.secondary{background:#eef0f3;color:#111827}
 .list{display:flex;flex-direction:column;gap:10px}
 .item{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:12px;background:white}
 .item-main{min-width:0}.item-title{font-weight:800}.item-sub{font-size:13px;color:var(--muted);margin-top:3px}
-.order{width:28px;height:28px;border-radius:50%;background:#3A2A32;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:0 0 auto}
+.order{width:28px;height:28px;border-radius:50%;background:#111827;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:0 0 auto}
 .item-left{display:flex;gap:12px;align-items:center;min-width:0}
 .item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.mini{padding:8px 10px;border-radius:8px;background:#eef0f3;color:#3A2A32;font-size:12px}
+.mini{padding:8px 10px;border-radius:8px;background:#eef0f3;color:#111827;font-size:12px}
 .mini.danger{background:#f6eeee;color:#7f1d1d}
 .mini:disabled{opacity:.4;cursor:not-allowed}
 .empty{color:var(--muted);padding:8px 0}
@@ -45,32 +45,32 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 .day-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}
 .badge{font-size:12px;background:#eef0f3;border-radius:999px;padding:5px 9px;color:#4b5563}
 .new-student-row{display:flex;justify-content:flex-end;margin-top:10px}
-.link-button{background:transparent;color:#3A2A32;border:1px solid #cfd4dc}
+.link-button{background:transparent;color:#111827;border:1px solid #cfd4dc}
 .modal-backdrop{position:fixed;inset:0;background:rgba(17,24,39,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:100}
 .modal-backdrop.show{display:flex}
 .modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.25)}
 .modal-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:16px}
 .modal-head h2{margin:0}
-.icon-btn{background:#eef0f3;color:#3A2A32;padding:8px 11px}
+.icon-btn{background:#eef0f3;color:#111827;padding:8px 11px}
 .full{grid-column:1/-1}
 .created-box{margin-top:16px;padding:14px;border-radius:12px;background:#f3f4f6;display:none}
 .created-link{word-break:break-all;font-size:13px;margin:7px 0 11px}
 .management-row{display:flex;justify-content:center;margin:22px 0 0}
-.management-btn{background:#fff;color:#3A2A32;border:1px solid #d1d5db}
+.management-btn{background:#fff;color:#111827;border:1px solid #d1d5db}
 .state-actions{display:grid;gap:10px}
 .inactive-list{display:grid;gap:8px;margin:12px 0}
-.inactive-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #E7DADF;border-radius:10px;cursor:pointer}
+.inactive-item{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid #e5e7eb;border-radius:10px;cursor:pointer}
 .inactive-item input{width:auto}
-.editing{outline:2px solid #3A2A32;outline-offset:2px}
+.editing{outline:2px solid #111827;outline-offset:2px}
 
 .block-type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.type-btn{background:#f3f4f6;color:#3A2A32;border:1px solid #d1d5db}
-.type-btn.active{background:#3A2A32;color:#fff;border-color:#3A2A32}
+.type-btn{background:#f3f4f6;color:#111827;border:1px solid #d1d5db}
+.type-btn.active{background:#111827;color:#fff;border-color:#111827}
 .builder-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 8px}
 .draft-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .draft-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fafafa}
 .block-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
-.block-card.combined{border-left:4px solid #3A2A32}
+.block-card.combined{border-left:4px solid #111827}
 .block-label{font-size:11px;font-weight:800;letter-spacing:.45px;text-transform:uppercase;color:#6b7280;margin-bottom:6px}
 .block-exercises{display:flex;flex-direction:column;gap:4px;margin-top:7px}
 .block-exercise{font-size:13px;color:#374151}
@@ -93,7 +93,7 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 .day-card.collapsed .day-head{border-bottom:none}
 .day-list{display:flex;flex-direction:column;gap:10px}
 .routine-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border:1px solid #dfe3e8;border-radius:12px;padding:12px;background:#fff}
-.routine-row.combined{border-left:4px solid #3A2A32}
+.routine-row.combined{border-left:4px solid #111827}
 .routine-main{min-width:0;flex:1}
 .routine-title{font-weight:800;font-size:15px}
 .routine-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4}
@@ -134,8 +134,50 @@ button:disabled{cursor:not-allowed;opacity:1}
 }
 
 
-/* Paleta PILOTO · rosa profesional / malva
-   Principal #8F5D72 · Oscuro #77495D · Fondo #FAF7F8 · Suave #F3EAEE */
+/* === PILOTO · PALETA ROSA PROFESIONAL === */
+:root{
+  --bg:#FAF7F8;
+  --card:#FFFFFF;
+  --ink:#3A2A32;
+  --muted:#7B6570;
+  --line:#D9C8D0;
+  --soft:#F5EEF1;
+}
+body{background:#FAF7F8;color:#3A2A32}
+.header{background:#6F4357;color:#FFFFFF}
+.card{background:#FFFFFF;border-color:#D9C8D0}
+.student-context-card{background:#F1E5EA;border-color:#D7BDC9}
+input,select,textarea{border-color:#D5C1CB;background:#FFFFFF;color:#3A2A32}
+.results{background:#FFFFFF;border-color:#D9C8D0}
+.result:hover{background:#F5EEF1}
+.primary{background:#8F5D72;color:#FFFFFF}
+.primary:hover{background:#77495D}
+.secondary{background:#EEE3E8;color:#4A343F}
+.link-button{background:#FFFFFF;color:#6F4357;border-color:#CDB6C1}
+.order{background:#8F5D72;color:#FFFFFF}
+.mini{background:#EEE3E8;color:#4A343F}
+.note,.block-note,.routine-note,.created-box{background:#F4ECEF;color:#5E4B54}
+.badge{background:#E9DCE2;color:#6F5360}
+.management-btn{background:#FFFFFF;color:#6F4357;border-color:#D5C1CB}
+.icon-btn{background:#EEE3E8;color:#4A343F}
+.editing{outline-color:#8F5D72}
+.type-btn{background:#F1E8EC;color:#4A343F;border-color:#D9C8D0}
+.type-btn.active{background:#8F5D72;color:#FFFFFF;border-color:#8F5D72}
+.block-card.combined,.routine-row.combined{border-left-color:#8F5D72}
+.day-card{border-color:#D7C6CE;background:#F6EFF2}
+.day-head{background:#E8D6DE;border-bottom-color:#D7C6CE}
+.day-body{background:#F6EFF2}
+.routine-row{border-color:#DED0D6;background:#FFFFFF}
+.inline-editor{border-color:#CEB7C2;background:#EEDFE5}
+.save-day-disabled{background:#F2EDF0!important;color:#B29FA8!important;border-color:#E1D5DA!important}
+.editor-save-disabled{background:#DDD0D6!important;color:#A08C96!important}
+.super-ex-card{border-color:#D7C6CE}
+.day-delete-btn{color:#A34F65;border-color:#D8B8C4}
+.day-delete-btn:hover{background:#FBF3F6}
+.routine-save-indicator{color:#6F5360}
+.routine-save-indicator.saving{color:#9A7448}
+.routine-save-indicator.pending{color:#8F6B46}
+
 </style>
 </head>
 <body>
