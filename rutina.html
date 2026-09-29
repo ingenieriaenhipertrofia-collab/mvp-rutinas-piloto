@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rutina · Ingeniería en Hipertrofia</title>
+<style>
+:root{
+  --bg:#f2f4f6;
+  --card:#ffffff;
+  --ink:#161a1f;
+  --muted:#6b7280;
+  --line:#dfe3e8;
+  --soft:#f6f7f8;
+  --day:#eef1f4;
+  --day-head:#e5e9ed;
+  --accent:#171c22;
+  --note:#fff8e7;
+  --note-line:#e7d7a6;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.header{
+  padding:28px 18px 20px;
+  text-align:center;
+}
+.header h1{
+  margin:0;
+  font-size:18px;
+  letter-spacing:.08em;
+}
+.header p{
+  margin:7px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+.wrap{
+  max-width:900px;
+  margin:0 auto;
+  padding:0 14px 36px;
+}
+.main-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.035);
+}
+.topline{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+}
+.eyebrow{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.topline h2{
+  margin:3px 0 0;
+  font-size:25px;
+}
+.summary{
+  font-size:13px;
+  color:var(--muted);
+  font-weight:700;
+}
+.day-card{
+  background:var(--day);
+  border:1px solid #d8dde3;
+  border-radius:16px;
+  overflow:hidden;
+  margin-top:14px;
+}
+.day-head{
+  padding:15px 16px;
+  background:var(--day-head);
+  border-bottom:1px solid #d5dbe1;
+}
+.day-title{
+  font-size:18px;
+  font-weight:850;
+}
+.day-meta{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:12px;
+}
+.day-body{
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.exercise-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:14px;
+}
+.exercise-title{
+  font-weight:850;
+  font-size:16px;
+}
+.exercise-meta{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:7px;
+}
+.pill{
+  background:var(--soft);
+  border:1px solid #e7eaee;
+  border-radius:999px;
+  padding:6px 9px;
+  font-size:12px;
+  color:#4b5563;
+  font-weight:700;
+}
+.note{
+  margin-top:11px;
+  padding:10px 11px;
+  background:var(--note);
+  border:1px solid var(--note-line);
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.45;
+}
+.video{
+  display:inline-flex;
+  margin-top:11px;
+  text-decoration:none;
+  color:#111827;
+  font-size:13px;
+  font-weight:800;
+  border:1px solid #d7dce2;
+  border-radius:10px;
+  padding:9px 11px;
+  background:#fff;
+}
+.super-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-left:4px solid var(--accent);
+  border-radius:13px;
+  padding:14px;
+}
+.super-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+.super-title{
+  font-weight:900;
+  font-size:16px;
+}
+.super-sub{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:3px;
+}
+.super-list{
+  margin-top:12px;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.super-ex{
+  border:1px solid #e4e7eb;
+  border-radius:11px;
+  padding:11px 12px;
+  background:#fafbfc;
+}
+.super-ex-name{
+  font-weight:800;
+}
+.super-ex-meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px;
+}
+.loading,.error,.empty{
+  padding:30px 12px;
+  text-align:center;
+  color:var(--muted);
+}
+.error{color:#9b2c2c}
+.footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  padding:18px 0 0;
+}
+@media(max-width:640px){
+  .main-card{padding:14px;border-radius:16px}
+  .topline h2{font-size:22px}
+  .day-body{padding:10px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>INGENIERÍA EN HIPERTROFIA</h1>
+  <p>Prescripción de entrenamiento individualizada</p>
+</div>
+
+<div class="wrap">
+  <div class="main-card">
+    <div class="topline">
+      <div>
+        <div class="eyebrow">Rutina</div>
+        <h2 id="studentName">Tu entrenamiento</h2>
+      </div>
+      <div id="summary" class="summary"></div>
+    </div>
+
+    <div id="loading" class="loading">Cargando rutina…</div>
+    <div id="routine"></div>
+  </div>
+  <div class="footer">Rutina actualizada por tu entrenador.</div>
+</div>
+
+<script>
+const ROUTINES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTMHhQr9bZmTQkw67Aj7v5mRXRIC-T3tUfkO8sxtBgcYcXBid-mEV31OaBbUagrK8csm32ON9a0rVuX/pub?gid=339469399&single=true&output=csv';
+const EXERCISES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQq0vsM4pdfnzXMvN0WlceU4Tno44ttI_Xs4EPME_RpJuTbFwwx5aZx7v97wZs1BhLDu7TN5i1hCatY/pub?gid=41200741&single=true&output=csv';
+const DAY_NAMES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSosV9FXjIIj8qjK_UG5_SmH4_idZ0Fxo39TD4DPD1-DzRzsDYRFb7xGfu6OCSYrq5Ksi09RuWiAvtB/pub?gid=845125079&single=true&output=csv';
+const STUDENTS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQq0vsM4pdfnzXMvN0WlceU4Tno44ttI_Xs4EPME_RpJuTbFwwx5aZx7v97wZs1BhLDu7TN5i1hCatY/pub?gid=1888921254&single=true&output=csv';
+const NEW_STUDENTS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRonYAKol1CySnuHwPDVktKld_padRKy9F_ZYYogyDCkOz7hZkBFKCnxiYnej01QsUPPuhKjejEWWEQ/pub?gid=1004033237&single=true&output=csv';
+const DAY_ORDER=['A','B','C','D','E','F'];
+// Vista de rutina completa/PDF: no carga ni muestra intencion, sensacion ni error_evitar.
+
+function normalizeHeader(h){
+  return String(h||'').replace(/^\uFEFF/,'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+}
+function splitLine(line){
+  const out=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){
+      if(q && line[i+1]==='"'){cur+='"';i++;}
+      else q=!q;
+    }else if(ch===',' && !q){out.push(cur);cur='';}
+    else cur+=ch;
+  }
+  out.push(cur); return out;
+}
+function parseCSV(text){
+  const lines=text.replace(/\r/g,'').split('\n').filter(x=>x.trim()!=='');
+  if(!lines.length) return [];
+  const headers=splitLine(lines[0]).map(normalizeHeader);
+  return lines.slice(1).map(line=>{
+    const vals=splitLine(line), o={};
+    headers.forEach((h,i)=>o[h]=(vals[i]||'').trim());
+    return o;
+  });
+}
+function esc(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function dayTitle(day,labels){
+  const cfg=labels[day];
+  if(!cfg || !cfg.name) return 'Día '+day;
+  return cfg.type==='BLOQUE' ? 'Bloque · '+cfg.name : 'Día '+cfg.name;
+}
+function buildDayLabels(rows,token){
+  const labels={};
+  rows.forEach(r=>{
+    if(String(r.token||'').trim()!==token) return;
+    const d=String(r.dia_id||r.dia||'').trim().toUpperCase();
+    if(!DAY_ORDER.includes(d)) return;
+    const name=String(r.nombre_visible||'').trim();
+    const type=String(r.tipo_nombre||'DIA').trim().toUpperCase()==='BLOQUE'?'BLOQUE':'DIA';
+    if(name) labels[d]={type,name}; else delete labels[d];
+  });
+  return labels;
+}
+function enrich(rows,lib){
+  const byId=new Map(
+    lib.filter(x=>x.id_ejercicio).map(x=>[
+      String(x.id_ejercicio).trim(),
+      {
+        id_ejercicio:String(x.id_ejercicio||'').trim(),
+        ejercicio:String(x.ejercicio||'').trim(),
+        video_url:String(x.video_url||'').trim()
+      }
+    ])
+  );
+  return rows.map(r=>{
+    const libRow=byId.get(String(r.id_ejercicio||'').trim())||{};
+    return {
+      ...r,
+      ejercicio:r.ejercicio||libRow.ejercicio||'',
+      video_url:libRow.video_url||''
+    };
+  });
+}
+function normalizeType(v){
+  return String(v||'').trim().toUpperCase()==='COMBINADO'?'COMBINADO':'INDIVIDUAL';
+}
+function groupDay(rows){
+  const groups=[], map=new Map();
+  rows
+    .sort((a,b)=>(Number(a.orden_bloque)||Number(a.orden)||0)-(Number(b.orden_bloque)||Number(b.orden)||0)
+      ||(Number(a.orden_en_bloque)||1)-(Number(b.orden_en_bloque)||1))
+    .forEach((r,idx)=>{
+      const type=normalizeType(r.tipo_bloque);
+      const id=String(r.bloque_id||'').trim() || ('LEGACY_'+idx);
+      let g=map.get(id);
+      if(!g){
+        g={id,type,series:r.series||'',note:r.nota_entrenador||'',items:[]};
+        map.set(id,g); groups.push(g);
+      }
+      if(!g.note && r.nota_entrenador) g.note=r.nota_entrenador;
+      g.items.push(r);
+    });
+  return groups;
+}
+function metaPills(series,reps,tempo,load){
+  const parts=[];
+  if(series) parts.push(`<span class="pill">${esc(series)} series</span>`);
+  if(reps) parts.push(`<span class="pill">${esc(reps)} reps</span>`);
+  if(tempo) parts.push(`<span class="pill">Tempo ${esc(tempo)}</span>`);
+  if(load) parts.push(`<span class="pill">Carga inicial ${esc(load)}</span>`);
+  return parts.join('');
+}
+function renderIndividual(block){
+  const ex=block.items[0]||{};
+  return `
+    <div class="exercise-card">
+      <div class="exercise-title">${esc(ex.ejercicio||'Ejercicio')}</div>
+      <div class="exercise-meta">${metaPills(block.series,ex.reps,ex.tempo,ex.carga_inicial)}</div>
+      ${block.note?`<div class="note">${esc(block.note)}</div>`:''}
+      ${ex.video_url?`<a class="video" href="${esc(ex.video_url)}" target="_blank" rel="noopener noreferrer">▶ Ver video</a>`:''}
+    </div>`;
+}
+function renderSuperset(block){
+  const exercises=block.items.map((ex,i)=>`
+    <div class="super-ex">
+      <div class="super-ex-name">${i+1}. ${esc(ex.ejercicio||'Ejercicio')}</div>
+      <div class="super-ex-meta">
+        ${esc(ex.reps||'—')} reps${ex.tempo?' · tempo '+esc(ex.tempo):''}${ex.carga_inicial?' · carga inicial '+esc(ex.carga_inicial):''}
+      </div>
+      ${ex.video_url?`<a class="video" href="${esc(ex.video_url)}" target="_blank" rel="noopener noreferrer">▶ Ver video</a>`:''}
+    </div>`).join('');
+  return `
+    <div class="super-card">
+      <div class="super-head">
+        <div>
+          <div class="super-title">Superserie · ${block.items.length} ejercicios</div>
+          <div class="super-sub">${esc(block.series||'—')} vueltas</div>
+        </div>
+      </div>
+      ${block.note?`<div class="note">${esc(block.note)}</div>`:''}
+      <div class="super-list">${exercises}</div>
+    </div>`;
+}
+function renderRoutine(rows,labels){
+  const byDay=new Map();
+  rows.forEach(r=>{
+    const d=String(r.dia||'').trim().toUpperCase();
+    if(!byDay.has(d)) byDay.set(d,[]);
+    byDay.get(d).push(r);
+  });
+  const days=DAY_ORDER.filter(d=>byDay.has(d));
+  document.getElementById('summary').textContent=
+    days.length+' día'+(days.length===1?'':'s')+'/semana';
+
+  const root=document.getElementById('routine');
+  root.innerHTML=days.map(day=>{
+    const blocks=groupDay(byDay.get(day));
+    const exerciseCount=blocks.reduce((n,b)=>n+b.items.length,0);
+    const supers=blocks.filter(b=>b.type==='COMBINADO').length;
+    const meta=exerciseCount+' ejercicio'+(exerciseCount===1?'':'s')+
+      (supers?' · '+supers+' superserie'+(supers===1?'':'s'):'');
+    return `
+      <section class="day-card">
+        <div class="day-head">
+          <div class="day-title">${esc(dayTitle(day,labels))}</div>
+          <div class="day-meta">${esc(meta)}</div>
+        </div>
+        <div class="day-body">
+          ${blocks.map(b=>b.type==='COMBINADO'?renderSuperset(b):renderIndividual(b)).join('')}
+        </div>
+      </section>`;
+  }).join('');
+}
+(async()=>{
+  const loading=document.getElementById('loading');
+  try{
+    const token=(new URLSearchParams(location.search).get('token')||'').trim();
+    if(!token) throw new Error('Falta el token de la rutina.');
+
+    const bust='&t='+Date.now();
+    const [routineRes,libRes,namesRes,studentsRes,newStudentsRes]=await Promise.all([
+      fetch(ROUTINES_CSV+bust,{cache:'no-store'}),
+      fetch(EXERCISES_CSV+bust,{cache:'no-store'}),
+      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'})
+    ]);
+    const routineText=await routineRes.text();
+    const libText=await libRes.text();
+    const namesText=await namesRes.text();
+    const studentsText=await studentsRes.text();
+    const newStudentsText=await newStudentsRes.text();
+
+    const routineRows=parseCSV(routineText)
+      .filter(r=>String(r.token||'').trim()===token && r.dia && r.ejercicio);
+    if(!routineRows.length) throw new Error('No hay una rutina vigente para este enlace.');
+
+    const rows=enrich(routineRows,parseCSV(libText));
+    const labels=buildDayLabels(parseCSV(namesText),token);
+
+    const baseStudents=parseCSV(studentsText);
+    const createdStudents=parseCSV(newStudentsText);
+    const allStudents=[...baseStudents,...createdStudents];
+    const student=[...allStudents].reverse().find(s=>String(s.token||'').trim()===token);
+    if(student && String(student.nombre||'').trim()){
+      document.getElementById('studentName').textContent=String(student.nombre).trim();
+    }
+
+    loading.style.display='none';
+    renderRoutine(rows,labels);
+  }catch(e){
+    loading.className='error';
+    loading.textContent='No se pudo cargar la rutina: '+e.message;
+  }
+})();
+</script>
+</body>
+</html>
