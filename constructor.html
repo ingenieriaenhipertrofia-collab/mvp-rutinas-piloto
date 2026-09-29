@@ -138,7 +138,7 @@ button:disabled{cursor:not-allowed;opacity:1}
 <body>
 <div class="header">
   <h1>Constructor de rutina</h1>
-  <p>Prueba de flujo · entrenador · PILOTO v3</p>
+  <p>Prueba de flujo · entrenador</p>
 </div>
 
 <div class="wrap">
@@ -406,9 +406,6 @@ const STUDENT_STATE_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWIQ
 const DAY_NAMES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS11sMy65gbqqSlGGatOa1lS2TUbETHQmQ3Qju0OMT8dmo3pXwO5PRTpzjJ13AIV1g1vHRChaSxlkHP/pub?gid=1912648114&single=true&output=csv";
 const DAY_NAMES_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSchwwdNgCmY6UD1hysbnJ8fq2m1CWBbdL4Ax1iKUZ-kBPN5-A/formResponse";
 const DAY_LABEL_CACHE_TTL_MS = 10 * 60 * 1000; // respaldo temporal por 10 minutos
-const RECENT_STUDENTS_CACHE_KEY = 'pilot_recent_students_v1';
-const RECENT_STUDENTS_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // respaldo temporal por 24 h
-
 let exercises=[], currentRows=[], students=[], studentStates=[], selected=null, routines={A:[],B:[],C:[],D:[],E:[],F:[]};
 let blockMode='INDIVIDUAL', blockDraft=[], editingBlockIndex=null, editingDraftIndex=null;
 let editorContext=null, visibleDays=[], collapsedDays=new Set(), dirtyDays=new Set(), dayLabels={}, dayNameRows=[], renamingDay=null, editorDirty=false;
@@ -478,52 +475,6 @@ function choose(ex){
 function isActiveValue(v){
   const s=String(v||'').trim().toLowerCase();
   return ['true','verdadero','1','si','sí','yes'].includes(s);
-}
-
-
-function readRecentStudentsCache(){
-  try{
-    const raw=localStorage.getItem(RECENT_STUDENTS_CACHE_KEY);
-    if(!raw) return [];
-    const parsed=JSON.parse(raw);
-    if(!Array.isArray(parsed)) return [];
-    const now=Date.now();
-    const valid=parsed.filter(x=>x && x.student && (now-Number(x.savedAt||0))<RECENT_STUDENTS_CACHE_TTL_MS);
-    if(valid.length!==parsed.length) localStorage.setItem(RECENT_STUDENTS_CACHE_KEY,JSON.stringify(valid));
-    return valid.map(x=>x.student);
-  }catch(e){
-    return [];
-  }
-}
-
-function writeRecentStudentCache(student){
-  try{
-    const token=String(student?.token||'').trim();
-    if(!token) return;
-    const current=readRecentStudentsCache().filter(x=>String(x.token||'').trim()!==token);
-    const packed=[
-      ...current.map(s=>({student:s,savedAt:Date.now()})),
-      {student,savedAt:Date.now()}
-    ];
-    localStorage.setItem(RECENT_STUDENTS_CACHE_KEY,JSON.stringify(packed));
-  }catch(e){}
-}
-
-function reconcileRecentStudentsCache(csvStudents){
-  try{
-    const confirmed=new Set(csvStudents.map(s=>String(s.token||'').trim()).filter(Boolean));
-    const raw=localStorage.getItem(RECENT_STUDENTS_CACHE_KEY);
-    if(!raw) return;
-    const parsed=JSON.parse(raw);
-    if(!Array.isArray(parsed)) return;
-    const now=Date.now();
-    const keep=parsed.filter(x=>{
-      const token=String(x?.student?.token||'').trim();
-      return token && !confirmed.has(token) && (now-Number(x.savedAt||0))<RECENT_STUDENTS_CACHE_TTL_MS;
-    });
-    if(keep.length) localStorage.setItem(RECENT_STUDENTS_CACHE_KEY,JSON.stringify(keep));
-    else localStorage.removeItem(RECENT_STUDENTS_CACHE_KEY);
-  }catch(e){}
 }
 
 function populateStudents(preferredToken=''){
@@ -602,8 +553,7 @@ document.getElementById('saveStudentBtn').addEventListener('click',()=>{
   document.getElementById('afActivo').value='TRUE';
   document.getElementById('studentForm').submit();
 
-  const newStudent={alumna_id:alumnaId,nombre,objetivo_principal:objetivo,fecha_inicio:fecha,token,activo:'TRUE'};
-  students.push(newStudent);
+  students.push({alumna_id:alumnaId,nombre,objetivo_principal:objetivo,fecha_inicio:fecha,token,activo:'TRUE'});
   populateStudents(token);
   loadCurrentRoutinesForStudent();
 
@@ -1758,56 +1708,39 @@ async function commitDay(day){
     }
   }
 }
-async function fetchCsvRows(url,bust){
-  try{
-    const res=await fetch(url+bust,{cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return parseCSV(await res.text());
-  }catch(e){
-    console.error('No se pudo leer CSV:',url,e);
-    return null;
-  }
-}
-
 (async()=>{
-  const bust='&t='+Date.now();
+  try{
+    const bust='&t='+Date.now();
+    const [exRes, currentRes, studentsRes, newStudentsRes, stateRes, dayNamesRes]=await Promise.all([
+      fetch(CSV_URL+bust,{cache:'no-store'}),
+      fetch(CURRENT_ROUTINES_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(STUDENT_STATE_CSV+bust,{cache:'no-store'}),
+      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'})
+    ]);
 
-  const [exRows, routineRows, createdStudentRows, stateRows, dayRows]=await Promise.all([
-    fetchCsvRows(CSV_URL,bust),
-    fetchCsvRows(CURRENT_ROUTINES_CSV,bust),
-    fetchCsvRows(NEW_STUDENTS_CSV,bust),
-    fetchCsvRows(STUDENT_STATE_CSV,bust),
-    fetchCsvRows(DAY_NAMES_CSV,bust)
-  ]);
+    exercises=parseCSV(await exRes.text()).filter(x=>x.ejercicio);
+    currentRows=parseCSV(await currentRes.text()).filter(x=>x.token && x.dia && x.ejercicio);
+    const baseStudents=parseCSV(await studentsRes.text());
+    const createdStudents=parseCSV(await newStudentsRes.text()).map(s=>({
+      ...s,
+      activo: String(s.activo||'').trim() || 'TRUE'
+    }));
+    students=[...baseStudents,...createdStudents];
+    studentStates=parseCSV(await stateRes.text());
+    dayNameRows=parseCSV(await dayNamesRes.text());
 
-  exercises=(exRows||[]).filter(x=>x.ejercicio);
-  currentRows=(routineRows||[]).filter(x=>x.token && x.dia && x.ejercicio);
+    populateStudents();
 
-  // En el piloto, DB03 es la ÚNICA fuente persistente de alumnas.
-  // Esto elimina cualquier mezcla con DB00 y hace el comportamiento determinista.
-  const createdStudents=(createdStudentRows||[]).map(s=>({
-    alumna_id:String(s.alumna_id||'').trim(),
-    nombre:String(s.nombre||'').trim(),
-    objetivo_principal:String(s.objetivo_principal||'').trim(),
-    fecha_inicio:String(s.fecha_inicio||'').trim(),
-    token:String(s.token||'').trim(),
-    activo:String(s.activo||'').trim() || 'TRUE'
-  })).filter(s=>s.nombre && s.token);
-
-  students=createdStudents;
-  studentStates=stateRows||[];
-  dayNameRows=dayRows||[];
-
-  populateStudents();
-
-  if(document.getElementById('student').value){
-    loadCurrentRoutinesForStudent();
-  }else{
+    if(document.getElementById('student').value){
+      loadCurrentRoutinesForStudent();
+    }else{
+      renderWorkspace();
+    }
+  }catch(e){
+    alert('No se pudo cargar alumnas, biblioteca o rutina vigente.');
     renderWorkspace();
-  }
-
-  if(createdStudentRows===null){
-    alert('No se pudo leer la base de alumnas del piloto (DB03).');
   }
 })();
 </script>
