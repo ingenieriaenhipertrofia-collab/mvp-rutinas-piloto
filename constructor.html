@@ -277,7 +277,7 @@ button:disabled{cursor:not-allowed;opacity:1}
   </div>
 
   <form id="saveForm"
-        action="https://docs.google.com/forms/d/e/1FAIpQLSfIv0E4QQqQFFoTxxUngLl7QT3Vg-Aq-AHtY7T6bIPSMj4jtw/formResponse"
+        action="https://docs.google.com/forms/d/e/1FAIpQLSe-MSHHP6MxAL9YdizgDPk4ezObMKx4X-tfP2QaHsB4yoT6Pw/formResponse"
         method="POST"
         target="save_iframe"
         style="display:none">
@@ -387,7 +387,7 @@ button:disabled{cursor:not-allowed;opacity:1}
   </div>
 </div>
 
-<form id="studentForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfj2bSrrtbk7f26DxtQu9AZielrVumjU_6Wq6SIEL9QoEWd2g/formResponse" method="POST" target="student_iframe" style="display:none">
+<form id="studentForm" action="https://docs.google.com/forms/d/e/1FAIpQLSdspypc5NgDbQdRBxfkTduVSgWZr-Dt4-YY63N16ETIQjqjAw/formResponse" method="POST" target="student_iframe" style="display:none">
   <input type="hidden" name="entry.3406358" id="afAlumnaId">
   <input type="hidden" name="entry.1054094851" id="afNombre">
   <input type="hidden" name="entry.26884833" id="afObjetivo">
@@ -398,13 +398,13 @@ button:disabled{cursor:not-allowed;opacity:1}
 <iframe name="student_iframe" style="display:none"></iframe>
 
 <script>
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq0vsM4pdfnzXMvN0WlceU4Tno44ttI_Xs4EPME_RpJuTbFwwx5aZx7v97wZs1BhLDu7TN5i1hCatY/pub?gid=41200741&single=true&output=csv";
-const CURRENT_ROUTINES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTMHhQr9bZmTQkw67Aj7v5mRXRIC-T3tUfkO8sxtBgcYcXBid-mEV31OaBbUagrK8csm32ON9a0rVuX/pub?gid=339469399&single=true&output=csv";
-const STUDENTS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQq0vsM4pdfnzXMvN0WlceU4Tno44ttI_Xs4EPME_RpJuTbFwwx5aZx7v97wZs1BhLDu7TN5i1hCatY/pub?gid=1888921254&single=true&output=csv";
-const NEW_STUDENTS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRonYAKol1CySnuHwPDVktKld_padRKy9F_ZYYogyDCkOz7hZkBFKCnxiYnej01QsUPPuhKjejEWWEQ/pub?gid=1004033237&single=true&output=csv";
-const STUDENT_STATE_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR7BPBIklMyjNK_GcJ1K0slb_JW0fkU7B82AutWkglCb8d5UmiKDaiW4urPmtCxGTXANdIB0Z21l1kO/pub?gid=1659100872&single=true&output=csv";
-const DAY_NAMES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSosV9FXjIIj8qjK_UG5_SmH4_idZ0Fxo39TD4DPD1-DzRzsDYRFb7xGfu6OCSYrq5Ksi09RuWiAvtB/pub?gid=845125079&single=true&output=csv";
-const DAY_NAMES_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSe__2n7_OjTUm_Ehxx8-RLcPzFG17FD2cr6QjX5pI4vS9u8hQ/formResponse";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=41200741&single=true&output=csv";
+const CURRENT_ROUTINES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT1Beg305Pe0JKkMFCj-cKmyKxICGc4HnCUMy7aJQisCj2l0QgQG29ax30eBe7_eH8glAA6xjpweyGV/pub?gid=1251455005&single=true&output=csv";
+const STUDENTS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=1888921254&single=true&output=csv";
+const NEW_STUDENTS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRgU_Tt5UfDCDGGZyqQhby-9g6Ik7BzwT3b63qUkivSllAQTeZG3CwZAwDEPOjHRRYa2Kc_AZi2o3_G/pub?gid=2126698701&single=true&output=csv";
+const STUDENT_STATE_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWIQHf_L8FVCY7SYgzb42nvC4Zg6NxSBGBlBjTgebd_y8BAE4h122Ynk8fl5IGDZSIwraXzgo9ZTMo/pub?gid=5603002&single=true&output=csv";
+const DAY_NAMES_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS11sMy65gbqqSlGGatOa1lS2TUbETHQmQ3Qju0OMT8dmo3pXwO5PRTpzjJ13AIV1g1vHRChaSxlkHP/pub?gid=1912648114&single=true&output=csv";
+const DAY_NAMES_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSchwwdNgCmY6UD1hysbnJ8fq2m1CWBbdL4Ax1iKUZ-kBPN5-A/formResponse";
 const DAY_LABEL_CACHE_TTL_MS = 10 * 60 * 1000; // respaldo temporal por 10 minutos
 let exercises=[], currentRows=[], students=[], studentStates=[], selected=null, routines={A:[],B:[],C:[],D:[],E:[],F:[]};
 let blockMode='INDIVIDUAL', blockDraft=[], editingBlockIndex=null, editingDraftIndex=null;
@@ -557,7 +557,7 @@ document.getElementById('saveStudentBtn').addEventListener('click',()=>{
   populateStudents(token);
   loadCurrentRoutinesForStudent();
 
-  const link='https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas/?token='+encodeURIComponent(token);
+  const link='https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas-piloto/rutina.html?token='+encodeURIComponent(token);
   document.getElementById('createdStudentMeta').textContent='ID: '+alumnaId+' · Token: '+token;
   document.getElementById('createdStudentLink').textContent=link;
   document.getElementById('createdStudentBox').style.display='block';
@@ -582,7 +582,7 @@ document.getElementById('copyStudentLinkBtn').addEventListener('click',async()=>
 function selectedStudentLink(){
   const token=document.getElementById('student').value;
   if(!token) return '';
-  return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas/?token='+encodeURIComponent(token);
+  return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas-piloto/rutina.html?token='+encodeURIComponent(token);
 }
 
 document.getElementById('copySelectedStudentLinkBtn').addEventListener('click',async()=>{
@@ -607,7 +607,7 @@ document.getElementById('copySelectedStudentLinkBtn').addEventListener('click',a
 function selectedFullRoutineLink(){
   const token=document.getElementById('student').value;
   if(!token) return '';
-  return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas/rutina.html?token='+encodeURIComponent(token);
+  return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas-piloto/rutina.html?token='+encodeURIComponent(token);
 }
 
 document.getElementById('viewFullRoutineBtn').addEventListener('click',async()=>{
@@ -645,7 +645,7 @@ function allKnownStudents(){
   return [...byToken.values()];
 }
 async function submitStudentState(token,action,active){
-  const endpoint='https://docs.google.com/forms/d/e/1FAIpQLSfB9K2cnhlYWSqqzaLZOpeE_reyp0ZuUr0kvmzb7kDOfKrXlg/formResponse';
+  const endpoint='https://docs.google.com/forms/d/e/1FAIpQLSfHEyJCk--Xe6pBxny1wyVe2k7QhKgqJbMBmPeGuWf7jjYSow/formResponse';
   const body=new URLSearchParams();
   body.append('entry.1955490611',token);
   body.append('entry.1193693172',action);
