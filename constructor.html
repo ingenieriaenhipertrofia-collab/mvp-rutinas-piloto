@@ -134,60 +134,30 @@ button:disabled{cursor:not-allowed;opacity:1}
 }
 
 
-/* === PILOTO · PALETA ROSA PROFESIONAL === */
-:root{
-  --bg:#FAF7F8;
-  --card:#FFFFFF;
-  --ink:#3A2A32;
-  --muted:#7B6570;
-  --line:#D9C8D0;
-  --soft:#F5EEF1;
-}
-body{background:#FAF7F8;color:#3A2A32}
-.header{background:#6F4357;color:#FFFFFF}
-.card{background:#FFFFFF;border-color:#D9C8D0}
-.student-context-card{background:#F1E5EA;border-color:#D7BDC9}
-input,select,textarea{border-color:#D5C1CB;background:#FFFFFF;color:#3A2A32}
-.results{background:#FFFFFF;border-color:#D9C8D0}
-.result:hover{background:#F5EEF1}
-.primary{background:#8F5D72;color:#FFFFFF}
-.primary:hover{background:#77495D}
-.secondary{background:#EEE3E8;color:#4A343F}
-.link-button{background:#FFFFFF;color:#6F4357;border-color:#CDB6C1}
-.order{background:#8F5D72;color:#FFFFFF}
-.mini{background:#EEE3E8;color:#4A343F}
-.note,.block-note,.routine-note,.created-box{background:#F4ECEF;color:#5E4B54}
-.badge{background:#E9DCE2;color:#6F5360}
-.management-btn{background:#FFFFFF;color:#6F4357;border-color:#D5C1CB}
-.icon-btn{background:#EEE3E8;color:#4A343F}
-.editing{outline-color:#8F5D72}
-.type-btn{background:#F1E8EC;color:#4A343F;border-color:#D9C8D0}
-.type-btn.active{background:#8F5D72;color:#FFFFFF;border-color:#8F5D72}
-.block-card.combined,.routine-row.combined{border-left-color:#8F5D72}
-.day-card{border-color:#D7C6CE;background:#F6EFF2}
-.day-head{background:#E8D6DE;border-bottom-color:#D7C6CE}
-.day-body{background:#F6EFF2}
-.routine-row{border-color:#DED0D6;background:#FFFFFF}
-.inline-editor{border-color:#CEB7C2;background:#EEDFE5}
-.save-day-disabled{background:#F2EDF0!important;color:#B29FA8!important;border-color:#E1D5DA!important}
-.editor-save-disabled{background:#DDD0D6!important;color:#A08C96!important}
-.super-ex-card{border-color:#D7C6CE}
-.day-delete-btn{color:#A34F65;border-color:#D8B8C4}
-.day-delete-btn:hover{background:#FBF3F6}
-.routine-save-indicator{color:#6F5360}
-.routine-save-indicator.saving{color:#9A7448}
-.routine-save-indicator.pending{color:#8F6B46}
+/* ROSA PROFESIONAL V3 - override final */
+:root{--bg:#FAF7F8;--card:#FFFFFF;--ink:#3A2A32;--muted:#7B6570;--line:#D9C8D0;--soft:#F5EEF1}
+.header{background:#6F4357!important;color:#fff!important}
+.student-context-card{background:#F1E5EA!important;border-color:#D7BDC9!important}
+.primary,.type-btn.active,.order{background:#8F5D72!important;color:#fff!important;border-color:#8F5D72!important}
+.secondary,.mini,.icon-btn,.type-btn{background:#EEE3E8!important;color:#4A343F!important}
+.link-button,.management-btn{color:#6F4357!important;border-color:#CDB6C1!important}
+.day-card,.day-body{background:#F6EFF2!important;border-color:#D7C6CE!important}
+.day-head{background:#E8D6DE!important;border-bottom-color:#D7C6CE!important}
+.routine-row,.block-card,.super-ex-card,.card{border-color:#DED0D6!important}
+.inline-editor{background:#EEDFE5!important;border-color:#CEB7C2!important}
+.block-card.combined,.routine-row.combined{border-left-color:#8F5D72!important}
+input,select,textarea{border-color:#D5C1CB!important}
 
 </style>
 </head>
-<body>
-<div class="header">
+<body style="background:#FAF7F8;color:#3A2A32">
+<div class="header" style="background:#6F4357;color:#fff">
   <h1>Constructor de rutina</h1>
-  <p>Prueba de flujo · entrenador</p>
+  <p>Prueba de flujo · entrenador <span style="display:inline-block;margin-left:8px;padding:2px 7px;border-radius:999px;background:#E8D6DE;color:#5A3345;font-weight:800;opacity:1">ROSA v3</span></p>
 </div>
 
 <div class="wrap">
-  <div class="card student-context-card">
+  <div class="card student-context-card" style="background:#F1E5EA;border-color:#D7BDC9">
     <div>
       <label>Alumna</label>
       <select id="student">
