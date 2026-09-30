@@ -559,8 +559,8 @@ function renderSuperset(block){
           <div class="super-sub">${esc(block.series||'—')} vueltas</div>
         </div>
       </div>
-      ${block.note?`<div class="note">${esc(block.note)}</div>`:''}
       <div class="super-list">${exercises}</div>
+      ${block.note?`<div class="note">${esc(block.note)}</div>`:''}
     </div>`;
 }
 function renderRoutine(rows,labels){
