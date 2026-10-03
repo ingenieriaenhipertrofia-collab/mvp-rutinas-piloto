@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RP · Constructor de alimentación v8</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f6f3f5;color:#2f2930}
+  header{background:#3a2933;color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:22px}
+  header p{margin:5px 0 0;opacity:.82;font-size:13px}
+  main{max-width:1120px;margin:26px auto;padding:0 18px 40px}
+  .card{background:#fff;border-radius:14px;padding:22px;box-shadow:0 3px 14px rgba(0,0,0,.07);margin-bottom:18px}
+  h2{margin:0 0 18px;font-size:19px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#665b62}
+  input,textarea,select{width:100%;padding:10px 11px;border:1px solid #ddd3d8;border-radius:9px;font:inherit;background:#fff}
+  textarea{min-height:76px;resize:vertical}
+  button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}
+  .primary{background:#cf668f;color:#fff}
+  .secondary{background:#eee7eb;color:#493c43}
+  .danger{background:#f7e2e7;color:#8c4055}
+  .ghost{background:#faf7f9;color:#6b5862;border:1px solid #eadfe4}
+  .actions{display:flex;gap:9px;flex-wrap:wrap}
+  .meal{border:1px solid #e7d9df;border-radius:12px;padding:16px;margin-top:14px;background:#fff}
+  .meal-top{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+  .option{margin-top:14px;padding:14px;border-radius:10px;background:#fbf8fa;border:1px solid #efe3e8}
+  .option-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+  .option-title{font-weight:700;color:#614955}
+
+  .item{
+    display:grid;
+    grid-template-columns:86px 120px 1.45fr 120px 120px 1.1fr auto;
+    gap:8px;
+    align-items:end;
+    margin-top:8px
+  }
+  .other-unit{display:none;margin-top:6px}
+  .note-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    margin-bottom:6px;
+  }
+  .note-head label{margin:0}
+  .join-inline{
+    display:none;
+    padding:3px 7px;
+    border-radius:999px;
+    font-size:10px;
+    line-height:1.1;
+    font-weight:600;
+    background:#f2ebef;
+    color:#7b626e;
+    border:1px solid #e4d5dc;
+    white-space:nowrap;
+  }
+  .item:not(:first-child) .join-inline{display:inline-flex}
+  .note-input.group-disabled{
+    background:#f3eff1;
+    color:#a3989d;
+    pointer-events:none;
+  }
+
+  .joined-block{
+    margin:8px 0 2px;
+    padding:11px 12px;
+    background:#fff5f8;
+    border:1px solid #efd3df;
+    border-radius:10px;
+  }
+  .joined-block .joined-label{
+    font-size:12px;
+    font-weight:700;
+    color:#7f4d62;
+    margin-bottom:6px;
+  }
+  .joined-separator{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:8px;
+  }
+  .joined-separator button{
+    padding:4px 9px;
+    border-radius:999px;
+    font-size:10px;
+    font-weight:600;
+    background:#fff;
+    color:#8b6474;
+    border:1px solid #e8cfd9;
+  }
+
+
+  .library{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .library-empty{padding:16px;border:1px dashed #dccbd3;border-radius:10px;color:#7c6d74;background:#fbf8fa;font-size:13px}
+  .diet-card{border:1px solid #e7d9df;border-radius:12px;padding:14px;background:#fff}
+  .diet-card h3{margin:0 0 5px;font-size:15px;color:#3a2933}
+  .diet-card .meta{font-size:12px;color:#7b6b73;margin-bottom:10px;line-height:1.35}
+  .diet-card .card-actions{display:flex;flex-wrap:wrap;gap:7px}
+  .diet-card .card-actions button{padding:7px 10px;font-size:11px}
+  .active-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:#f4e4eb;color:#9b4f6e;font-size:10px;font-weight:700;vertical-align:middle}
+
+  .status{margin-top:12px;font-size:13px;color:#6e6068}
+  @media(max-width:980px){
+    .grid,.meal-top,.item{grid-template-columns:1fr}
+    .note-head{justify-content:flex-start}
+  }
+
+  /* Vista previa */
+  #previewWrap{display:none}
+  .preview{
+    background:#fff;
+    max-width:820px;
+    margin:0 auto;
+    padding:34px 36px;
+    border-radius:14px;
+    box-shadow:0 3px 14px rgba(0,0,0,.08);
+  }
+  .p-head{border-bottom:3px solid #cf668f;padding-bottom:14px;margin-bottom:18px}
+  .p-head h1{margin:0;font-size:24px;color:#3a2933}
+  .p-sub{margin-top:4px;color:#846f79;font-size:13px}
+  .p-meta{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;
+    background:#fbf7f9;border:1px solid #f0e3e9;border-radius:10px;
+    padding:14px;margin-bottom:18px
+  }
+  .p-meta div{font-size:13px}
+  .p-meta strong{display:block;color:#5b4952;margin-bottom:2px}
+  .p-meal{border:1px solid #ebdfe5;border-radius:12px;padding:15px 16px;margin:12px 0}
+  .p-meal h3{margin:0 0 3px;font-size:17px;color:#3a2933}
+  .p-timing{color:#b2557c;font-size:12px;font-weight:700;margin-bottom:10px}
+  .p-option{margin-top:10px;padding-top:10px;border-top:1px solid #f1e8ec}
+  .p-option:first-of-type{border-top:0;padding-top:0}
+  .p-option-title{font-size:12px;font-weight:700;color:#a24f72;margin-bottom:6px}
+  .p-item{font-size:14px;line-height:1.45;padding:2px 0}
+  .p-group{
+    margin:7px 0 9px;
+    padding:9px 10px;
+    background:#fbf7f9;
+    border-left:3px solid #cf668f;
+    border-radius:7px;
+  }
+  .p-group-items{font-size:14px;line-height:1.45}
+  .p-group-note{font-size:12px;color:#7a6670;margin-top:4px;font-style:italic}
+  .p-note{color:#7f7077;font-size:12px;margin-left:6px}
+  .p-general{margin-top:18px;background:#f8f3f5;border-radius:10px;padding:14px 16px}
+  .p-general h4{margin:0 0 8px;color:#3a2933}
+  .p-general p{margin:0;white-space:pre-wrap;font-size:13px;line-height:1.45}
+  .preview-actions{display:flex;gap:10px;justify-content:center;margin:16px 0 0}
+
+  @media print{
+    body{background:#fff}
+    header, main > .card, .preview-actions{display:none !important}
+    #previewWrap{display:block !important}
+    .preview{box-shadow:none;border-radius:0;max-width:none;padding:0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Constructor de planes de alimentación</h1>
+  <p>Romina Pizarro · Entrenadora Profesional</p>
+</header>
+
+<main>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <h2 style="margin:0">Mis dietas</h2>
+      <button class="primary" onclick="nuevaDieta()">+ Nueva dieta</button>
+    </div>
+    <div id="biblioteca" class="library"></div>
+  </div>
+
+  <div class="card">
+    <h2>Datos generales</h2>
+    <div class="grid">
+      <div>
+        <label>Alumno/a</label>
+        <input id="alumno" placeholder="Ej.: Giuliana">
+      </div>
+      <div>
+        <label>Título del plan</label>
+        <input id="titulo" placeholder="Ej.: Campeonato Cordobés 2026">
+      </div>
+      <div>
+        <label>Peso actual</label>
+        <input id="peso" placeholder="Ej.: 58 kg">
+      </div>
+      <div>
+        <label>Fecha</label>
+        <input id="fecha" type="date">
+      </div>
+      <div class="full">
+        <label>Cardio</label>
+        <input id="cardio" placeholder="Ej.: 6 veces por semana · 40 min · ayunas o post entreno">
+      </div>
+      <div class="full">
+        <label>Observaciones generales</label>
+        <textarea id="observaciones" placeholder="Ej.: Tomar 4 litros de agua por día. Bebidas sin azúcar permitidas."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Comidas</h2>
+    <div id="comidas"></div>
+    <div class="actions" style="margin-top:14px">
+      <button class="primary" onclick="agregarComida()">+ Agregar comida</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="actions">
+      <button class="primary" onclick="guardarDieta()">Guardar dieta</button>
+      <button class="secondary" onclick="generarVistaPrevia()">Vista previa</button>
+      <button class="secondary" onclick="exportar()">Exportar datos</button>
+      <button class="danger" onclick="limpiarFormulario()">Limpiar formulario</button>
+    </div>
+    <div id="estado" class="status">Versión 8: biblioteca local de dietas con guardar, abrir, duplicar, renombrar y eliminar.</div>
+  </div>
+
+  <div id="previewWrap">
+    <div id="preview" class="preview"></div>
+    <div class="preview-actions">
+      <button class="secondary" onclick="window.print()">Imprimir / Guardar como PDF</button>
+    </div>
+  </div>
+</main>
+
+<script>
+function agregarComida(data={}){
+  const meal=document.createElement('div');
+  meal.className='meal';
+  meal.innerHTML=`
+    <div class="meal-top">
+      <div>
+        <label>Nombre de la comida</label>
+        <input class="meal-name" placeholder="Ej.: Desayuno" value="${attr(data.nombre||'')}">
+      </div>
+      <div>
+        <label>Timing</label>
+        <input class="meal-timing" placeholder="Ej.: Pre entreno" value="${attr(data.timing||'')}">
+      </div>
+      <div><button class="danger remove-meal">Eliminar comida</button></div>
+    </div>
+    <div class="meal-options"></div>
+    <div class="actions" style="margin-top:12px">
+      <button class="ghost add-option">+ Agregar opción</button>
+    </div>
+  `;
+  meal.querySelector('.remove-meal').onclick=()=>meal.remove();
+  meal.querySelector('.add-option').onclick=()=>agregarOpcion(meal);
+  document.getElementById('comidas').appendChild(meal);
+
+  const opciones=data.opciones&&data.opciones.length?data.opciones:[{}];
+  opciones.forEach(o=>agregarOpcion(meal,o));
+}
+
+function agregarOpcion(meal,data={}){
+  const box=document.createElement('div');
+  box.className='option';
+  box.innerHTML=`
+    <div class="option-head">
+      <div class="option-title">Opción</div>
+      <button class="danger remove-option">Eliminar opción</button>
+    </div>
+    <div class="items"></div>
+    <div class="actions" style="margin-top:10px">
+      <button class="ghost add-item">+ Agregar alimento</button>
+    </div>
+  `;
+  box.querySelector('.remove-option').onclick=()=>{box.remove();renumerarOpciones(meal)};
+  box.querySelector('.add-item').onclick=()=>agregarItem(box);
+  meal.querySelector('.meal-options').appendChild(box);
+
+  const items=data.items&&data.items.length?data.items:[{}];
+  items.forEach(i=>agregarItem(box,i,false));
+  reconstruirGrupos(box,data.grupos||[]);
+  renumerarOpciones(meal);
+  refrescarUIGrupo(box);
+}
+
+function agregarItem(option,data={},refresh=true){
+  const row=document.createElement('div');
+  row.className='item';
+  row.dataset.itemId=data.itemId||('item_'+Date.now()+'_'+Math.random().toString(36).slice(2,8));
+  row.dataset.groupId=data.groupId||'';
+  row.innerHTML=`
+    <div>
+      <label>Cantidad</label>
+      <input class="qty" placeholder="150" value="${attr(data.cantidad||'')}">
+    </div>
+    <div>
+      <label>Unidad</label>
+      <select class="unit">
+        <option value="">—</option>
+        <option value="g.">g.</option>
+        <option value="unidades">unidades</option>
+        <option value="ml.">ml.</option>
+        <option value="cup">cup</option>
+        <option value="otra">otra</option>
+      </select>
+      <input class="other-unit" placeholder="Ej.: rodajas" value="${attr(data.otraUnidad||'')}">
+    </div>
+    <div>
+      <label>Alimento</label>
+      <input class="food" placeholder="Pechuga de pollo" value="${attr(data.alimento||'')}">
+    </div>
+    <div>
+      <label>p crudo/p cocido</label>
+      <select class="state">
+        <option value="">—</option>
+        <option value="crudo">Crudo</option>
+        <option value="cocido">Cocido</option>
+      </select>
+    </div>
+    <div>
+      <label>Grupo</label>
+      <select class="group">
+        <option value="">—</option>
+        <option>Proteína</option>
+        <option>Carbohidrato</option>
+        <option>Grasa</option>
+        <option>Fruta</option>
+        <option>Vegetal</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="note-cell">
+      <div class="note-head">
+        <label>Nota</label>
+        <button type="button" class="join-inline">Juntar nota</button>
+      </div>
+      <input class="note-input" placeholder="Opcional" value="${attr(data.nota||'')}">
+    </div>
+    <div><button class="danger remove-item">×</button></div>
+  `;
+
+  const unitSel=row.querySelector('.unit');
+  unitSel.value=data.unidad||'';
+  const other=row.querySelector('.other-unit');
+  if(unitSel.value==='otra') other.style.display='block';
+  unitSel.onchange=()=>{other.style.display=unitSel.value==='otra'?'block':'none'};
+
+  row.querySelector('.state').value=data.estado||'';
+  row.querySelector('.group').value=data.grupo||'';
+
+  row.querySelector('.join-inline').onclick=()=>juntarConAnterior(option,row);
+  row.querySelector('.remove-item').onclick=()=>{
+    const gid=row.dataset.groupId;
+    row.remove();
+    if(gid) desarmarGrupoSiQuedaInvalido(option,gid);
+    refrescarUIGrupo(option);
+  };
+
+  option.querySelector('.items').appendChild(row);
+  if(refresh) refrescarUIGrupo(option);
+}
+
+function juntarConAnterior(option,row){
+  const rows=[...option.querySelectorAll('.item')];
+  const idx=rows.indexOf(row);
+  if(idx<=0) return;
+  const prev=rows[idx-1];
+
+  let gid=prev.dataset.groupId || row.dataset.groupId || ('grupo_'+Date.now()+'_'+Math.random().toString(36).slice(2,6));
+
+  if(prev.dataset.groupId && row.dataset.groupId && prev.dataset.groupId!==row.dataset.groupId){
+    const old=row.dataset.groupId;
+    [...option.querySelectorAll('.item')].forEach(r=>{
+      if(r.dataset.groupId===old) r.dataset.groupId=gid;
+    });
+    const oldBlock=option.querySelector(`.joined-block[data-group-id="${old}"]`);
+    if(oldBlock) oldBlock.remove();
+  }
+
+  prev.dataset.groupId=gid;
+  row.dataset.groupId=gid;
+
+  let block=option.querySelector(`.joined-block[data-group-id="${gid}"]`);
+  if(!block){
+    block=document.createElement('div');
+    block.className='joined-block';
+    block.dataset.groupId=gid;
+    block.innerHTML=`
+      <div class="joined-label">Nota conjunta</div>
+      <input class="joined-note" placeholder="Ej.: preparar juntos en forma de tortilla">
+      <div class="joined-separator">
+        <button type="button">Separar alimento</button>
+      </div>
+    `;
+    block.querySelector('button').onclick=()=>separarUltimo(option,gid);
+  }
+
+  const groupRows=[...option.querySelectorAll('.item')].filter(r=>r.dataset.groupId===gid);
+  groupRows[groupRows.length-1].insertAdjacentElement('afterend',block);
+  refrescarUIGrupo(option);
+}
+
+function refrescarUIGrupo(option){
+  const rows=[...option.querySelectorAll('.item')];
+
+  rows.forEach((r,i)=>{
+    const btn=r.querySelector('.join-inline');
+    btn.style.display=i===0?'none':'inline-flex';
+
+    const note=r.querySelector('.note-input');
+    if(r.dataset.groupId){
+      note.value='';
+      note.classList.add('group-disabled');
+      note.placeholder='Nota conjunta';
+      note.disabled=true;
+    }else{
+      note.classList.remove('group-disabled');
+      note.placeholder='Opcional';
+      note.disabled=false;
+    }
+  });
+
+  // Si dos filas consecutivas ya pertenecen al mismo grupo, ocultar "Juntar nota"
+  for(let i=1;i<rows.length;i++){
+    if(rows[i].dataset.groupId && rows[i].dataset.groupId===rows[i-1].dataset.groupId){
+      rows[i].querySelector('.join-inline').style.display='none';
+    }
+  }
+
+  [...option.querySelectorAll('.joined-block')].forEach(block=>{
+    const gid=block.dataset.groupId;
+    const members=rows.filter(r=>r.dataset.groupId===gid);
+    if(members.length>=2){
+      members[members.length-1].insertAdjacentElement('afterend',block);
+    }
+  });
+}
+
+function separarUltimo(option,gid){
+  const members=[...option.querySelectorAll('.item')].filter(r=>r.dataset.groupId===gid);
+  const block=option.querySelector(`.joined-block[data-group-id="${gid}"]`);
+  if(members.length<=2){
+    members.forEach(r=>r.dataset.groupId='');
+    if(block) block.remove();
+  }else{
+    members[members.length-1].dataset.groupId='';
+    const left=[...option.querySelectorAll('.item')].filter(r=>r.dataset.groupId===gid);
+    if(block && left.length) left[left.length-1].insertAdjacentElement('afterend',block);
+  }
+  refrescarUIGrupo(option);
+}
+
+function desarmarGrupoSiQuedaInvalido(option,gid){
+  const members=[...option.querySelectorAll('.item')].filter(r=>r.dataset.groupId===gid);
+  const block=option.querySelector(`.joined-block[data-group-id="${gid}"]`);
+  if(members.length<2){
+    members.forEach(r=>r.dataset.groupId='');
+    if(block) block.remove();
+  }else if(block){
+    members[members.length-1].insertAdjacentElement('afterend',block);
+  }
+}
+
+function reconstruirGrupos(option,grupos){
+  grupos.forEach(g=>{
+    const members=[...option.querySelectorAll('.item')].filter(r=>r.dataset.groupId===g.id);
+    if(members.length<2)return;
+    const block=document.createElement('div');
+    block.className='joined-block';
+    block.dataset.groupId=g.id;
+    block.innerHTML=`
+      <div class="joined-label">Nota conjunta</div>
+      <input class="joined-note" placeholder="Ej.: preparar juntos en forma de tortilla" value="${attr(g.nota||'')}">
+      <div class="joined-separator">
+        <button type="button">Separar alimento</button>
+      </div>
+    `;
+    block.querySelector('button').onclick=()=>separarUltimo(option,g.id);
+    members[members.length-1].insertAdjacentElement('afterend',block);
+  });
+}
+
+function renumerarOpciones(meal){
+  [...meal.querySelectorAll('.option')].forEach((o,i)=>{
+    o.querySelector('.option-title').textContent='Opción '+(i+1);
+  });
+}
+
+function obtenerDatos(){
+  return {
+    alumno:val('alumno'),
+    titulo:val('titulo'),
+    peso:val('peso'),
+    fecha:val('fecha'),
+    cardio:val('cardio'),
+    observaciones:val('observaciones'),
+    comidas:[...document.querySelectorAll('.meal')].map(meal=>({
+      nombre:meal.querySelector('.meal-name').value.trim(),
+      timing:meal.querySelector('.meal-timing').value.trim(),
+      opciones:[...meal.querySelectorAll('.option')].map(op=>{
+        const items=[...op.querySelectorAll('.item')].map(r=>({
+          itemId:r.dataset.itemId,
+          groupId:r.dataset.groupId||'',
+          cantidad:r.querySelector('.qty').value.trim(),
+          unidad:r.querySelector('.unit').value,
+          otraUnidad:r.querySelector('.other-unit').value.trim(),
+          alimento:r.querySelector('.food').value.trim(),
+          estado:r.querySelector('.state').value,
+          grupo:r.querySelector('.group').value,
+          nota:r.querySelector('.note-input').disabled?'':r.querySelector('.note-input').value.trim()
+        }));
+        const grupos=[...op.querySelectorAll('.joined-block')].map(b=>({
+          id:b.dataset.groupId,
+          nota:b.querySelector('.joined-note').value.trim()
+        }));
+        return {items,grupos};
+      })
+    }))
+  };
+}
+
+function volcarDatos(d){
+  setv('alumno',d.alumno);setv('titulo',d.titulo);setv('peso',d.peso);
+  setv('fecha',d.fecha);setv('cardio',d.cardio);setv('observaciones',d.observaciones);
+  document.getElementById('comidas').innerHTML='';
+  (d.comidas||[]).forEach(c=>agregarComida(c));
+  if(!(d.comidas||[]).length) agregarComida({nombre:'Desayuno'});
+renderBiblioteca();
+}
+
+
+const LIB_KEY='rp_biblioteca_dietas_v1';
+let currentPlanId=null;
+
+function leerBiblioteca(){
+  try{return JSON.parse(localStorage.getItem(LIB_KEY)||'[]');}
+  catch(e){return [];}
+}
+function escribirBiblioteca(lista){
+  localStorage.setItem(LIB_KEY,JSON.stringify(lista));
+}
+function generarId(){
+  return 'plan_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+}
+function guardarDieta(){
+  const d=obtenerDatos();
+  if(!d.alumno && !d.titulo){
+    alert('Ingresá al menos el nombre del alumno/a o el título del plan.');
+    return;
+  }
+  const lista=leerBiblioteca();
+  const ahora=new Date().toISOString();
+
+  if(currentPlanId){
+    const idx=lista.findIndex(x=>x.id===currentPlanId);
+    if(idx>=0){
+      lista[idx]={...lista[idx],datos:d,actualizado:ahora};
+    }else{
+      currentPlanId=generarId();
+      lista.push({id:currentPlanId,datos:d,creado:ahora,actualizado:ahora});
+    }
+  }else{
+    currentPlanId=generarId();
+    lista.push({id:currentPlanId,datos:d,creado:ahora,actualizado:ahora});
+  }
+
+  escribirBiblioteca(lista);
+  renderBiblioteca();
+  estado('✅ Dieta guardada en Mis dietas.');
+}
+function abrirDieta(id){
+  const item=leerBiblioteca().find(x=>x.id===id);
+  if(!item)return;
+  currentPlanId=id;
+  volcarDatos(item.datos||{});
+  document.getElementById('previewWrap').style.display='none';
+  renderBiblioteca();
+  estado('✅ Dieta abierta para edición.');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function duplicarDieta(id){
+  const lista=leerBiblioteca();
+  const original=lista.find(x=>x.id===id);
+  if(!original)return;
+  const copia=JSON.parse(JSON.stringify(original.datos||{}));
+  copia.titulo=copia.titulo?copia.titulo+' · copia':'Copia';
+  const ahora=new Date().toISOString();
+  const nuevoId=generarId();
+  lista.push({id:nuevoId,datos:copia,creado:ahora,actualizado:ahora});
+  escribirBiblioteca(lista);
+  currentPlanId=nuevoId;
+  volcarDatos(copia);
+  renderBiblioteca();
+  estado('✅ Dieta duplicada. Estás editando la copia.');
+}
+function renombrarDieta(id){
+  const lista=leerBiblioteca();
+  const item=lista.find(x=>x.id===id);
+  if(!item)return;
+  const actual=(item.datos&&item.datos.titulo)||'';
+  const nuevo=prompt('Nuevo título del plan:',actual);
+  if(nuevo===null)return;
+  item.datos=item.datos||{};
+  item.datos.titulo=nuevo.trim();
+  item.actualizado=new Date().toISOString();
+  escribirBiblioteca(lista);
+  if(currentPlanId===id)document.getElementById('titulo').value=nuevo.trim();
+  renderBiblioteca();
+  estado('✅ Dieta renombrada.');
+}
+function eliminarDieta(id){
+  const lista=leerBiblioteca();
+  const item=lista.find(x=>x.id===id);
+  if(!item)return;
+  const d=item.datos||{};
+  const nombre=[d.alumno,d.titulo].filter(Boolean).join(' · ')||'esta dieta';
+  if(!confirm('¿Eliminar '+nombre+'?'))return;
+  escribirBiblioteca(lista.filter(x=>x.id!==id));
+  if(currentPlanId===id)currentPlanId=null;
+  renderBiblioteca();
+  estado('Dieta eliminada.');
+}
+function nuevaDieta(){
+  currentPlanId=null;
+  volcarDatos({comidas:[]});
+  document.getElementById('previewWrap').style.display='none';
+  renderBiblioteca();
+  estado('Nueva dieta lista para cargar.');
+}
+function limpiarFormulario(){
+  if(!confirm('¿Querés limpiar los campos de la dieta actual?'))return;
+  volcarDatos({comidas:[]});
+  document.getElementById('previewWrap').style.display='none';
+  estado('Formulario limpio.');
+}
+function renderBiblioteca(){
+  const cont=document.getElementById('biblioteca');
+  const lista=leerBiblioteca().slice().sort((a,b)=>(b.actualizado||'').localeCompare(a.actualizado||''));
+  if(!lista.length){
+    cont.innerHTML='<div class="library-empty">Todavía no hay dietas guardadas. Cargá una dieta y tocá <b>Guardar dieta</b>.</div>';
+    return;
+  }
+  cont.innerHTML=lista.map(x=>{
+    const d=x.datos||{};
+    const titulo=esc(d.titulo||'Plan sin título');
+    const alumno=esc(d.alumno||'Sin alumno/a');
+    const fecha=d.fecha?new Date(d.fecha+'T00:00:00').toLocaleDateString('es-AR'):'Sin fecha';
+    const activa=x.id===currentPlanId?'<span class="active-badge">abierta</span>':'';
+    return `<div class="diet-card">
+      <h3>${titulo}${activa}</h3>
+      <div class="meta">${alumno}<br>${esc(fecha)}</div>
+      <div class="card-actions">
+        <button class="primary" onclick="abrirDieta('${x.id}')">Abrir</button>
+        <button class="secondary" onclick="duplicarDieta('${x.id}')">Duplicar</button>
+        <button class="secondary" onclick="renombrarDieta('${x.id}')">Renombrar</button>
+        <button class="danger" onclick="eliminarDieta('${x.id}')">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function exportar(){
+  const blob=new Blob([JSON.stringify(obtenerDatos(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='plan_alimentacion_v8.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  estado('✅ Datos exportados.');
+}
+
+function generarVistaPrevia(){
+  const d=obtenerDatos();
+  const comidasHTML=d.comidas.map(c=>{
+    const opciones=(c.opciones||[]).map((o,idx)=>{
+      const groupMap=new Map((o.grupos||[]).map(g=>[g.id,g]));
+      const rendered=new Set();
+      let html='';
+
+      for(const i of (o.items||[])){
+        if(i.groupId && groupMap.has(i.groupId)){
+          if(rendered.has(i.groupId))continue;
+          rendered.add(i.groupId);
+          const gis=(o.items||[]).filter(x=>x.groupId===i.groupId);
+          const pieces=gis.map(x=>formatearItemPlano(x)).filter(Boolean);
+          const note=groupMap.get(i.groupId)?.nota||'';
+          html+=`<div class="p-group">
+            <div class="p-group-items">${pieces.map(esc).join(' + ')}</div>
+            ${note?`<div class="p-group-note">${esc(note)}</div>`:''}
+          </div>`;
+        }else{
+          const line=formatearItemHtml(i);
+          if(line)html+=`<div class="p-item">${line}</div>`;
+        }
+      }
+
+      if(!html)return '';
+      return `<div class="p-option">
+        ${c.opciones.length>1?`<div class="p-option-title">Opción ${idx+1}</div>`:''}
+        ${html}
+      </div>`;
+    }).join('');
+
+    if(!c.nombre && !opciones)return '';
+    return `<section class="p-meal">
+      <h3>${esc(c.nombre||'Comida')}</h3>
+      ${c.timing?`<div class="p-timing">${esc(c.timing)}</div>`:''}
+      ${opciones}
+    </section>`;
+  }).join('');
+
+  const fecha=d.fecha?new Date(d.fecha+'T00:00:00').toLocaleDateString('es-AR'):'';
+
+  document.getElementById('preview').innerHTML=`
+    <div class="p-head">
+      <h1>ROMINA PIZARRO · ENTRENADORA PROFESIONAL</h1>
+      <div class="p-sub">Planificación de alimentación individualizada</div>
+    </div>
+    <div class="p-meta">
+      <div><strong>Alumno/a</strong>${esc(d.alumno||'—')}</div>
+      <div><strong>Plan</strong>${esc(d.titulo||'—')}</div>
+      <div><strong>Peso actual</strong>${esc(d.peso||'—')}</div>
+      <div><strong>Fecha</strong>${esc(fecha||'—')}</div>
+      <div style="grid-column:1/-1"><strong>Cardio</strong>${esc(d.cardio||'—')}</div>
+    </div>
+    ${comidasHTML || '<p>No hay comidas cargadas.</p>'}
+    ${d.observaciones?`
+      <div class="p-general">
+        <h4>Indicaciones generales</h4>
+        <p>${esc(d.observaciones)}</p>
+      </div>`:''}
+  `;
+
+  document.getElementById('previewWrap').style.display='block';
+  document.getElementById('previewWrap').scrollIntoView({behavior:'smooth'});
+  estado('✅ Vista previa generada.');
+}
+
+function formatearItemPlano(i){
+  let unidad='';
+  if(i.unidad==='otra'){
+    unidad=i.otraUnidad||'';
+  }else if(i.unidad==='unidades'){
+    unidad='';
+  }else{
+    unidad=i.unidad||'';
+  }
+  const base=[i.cantidad,unidad,i.alimento].filter(Boolean).join(' ');
+  if(!base)return '';
+  const estado=i.estado?` · p ${i.estado}`:'';
+  return base+estado;
+}
+function formatearItemHtml(i){
+  let unidad='';
+  if(i.unidad==='otra'){
+    unidad=i.otraUnidad||'';
+  }else if(i.unidad==='unidades'){
+    unidad='';
+  }else{
+    unidad=i.unidad||'';
+  }
+  const base=[i.cantidad,unidad,i.alimento].filter(Boolean).join(' ');
+  if(!base)return '';
+  const estado=i.estado?` · p ${i.estado}`:'';
+  const nota=i.nota?` <span class="p-note">(${esc(i.nota)})</span>`:'';
+  return esc(base+estado)+nota;
+}
+
+function estado(t){document.getElementById('estado').textContent=t}
+function val(id){return document.getElementById(id).value.trim()}
+function setv(id,v){document.getElementById(id).value=v||''}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function attr(s){return esc(s)}
+
+agregarComida({nombre:'Desayuno'});
+renderBiblioteca();
+</script>
+</body>
+</html>
