@@ -128,9 +128,15 @@ button:disabled{cursor:not-allowed;opacity:1}
 @media(max-width:700px){.super-top-grid,.super-ex-grid{grid-template-columns:1fr}}
 .rename-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){
-  .week-header{align-items:stretch;flex-direction:column}
-  .week-header-action{justify-content:flex-start}
-  .profile-access-btn{width:auto}
+  .week-header{align-items:center;flex-direction:row}
+  .week-header-info{min-width:0;flex:1 1 auto}
+  .week-header-action{justify-content:flex-end;flex:0 0 auto}
+  .profile-access-btn{
+    width:auto;
+    white-space:nowrap;
+    padding:9px 11px;
+    font-size:12px;
+  }
   .day-head{align-items:flex-start}
   .day-head-actions{max-width:45%}
   .routine-row{flex-direction:column}
