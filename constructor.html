@@ -331,6 +331,7 @@ button:focus-visible{
       <div class="new-student-row" style="gap:8px;flex-wrap:wrap">
         <button id="copySelectedStudentLinkBtn" class="link-button" type="button">Copiar enlace para alumna</button>
         <button id="viewFullRoutineBtn" class="link-button" type="button">Ver rutina completa</button>
+        <button id="studentProfileBtn" class="link-button" type="button">Ficha del alumno/a</button>
         <button id="newStudentBtn" class="link-button" type="button">＋ Nueva alumna</button>
       </div>
     </div>
@@ -808,6 +809,35 @@ function selectedFullRoutineLink(){
   if(!token) return '';
   return 'https://ingenieriaenhipertrofia-collab.github.io/mvp-rutinas-piloto/rutina.html?token='+encodeURIComponent(token);
 }
+
+function selectedStudentProfileLink(){
+  const token=document.getElementById('student').value;
+  if(!token) return '';
+  return 'ficha.html?token='+encodeURIComponent(token);
+}
+
+function syncStudentTokenInUrl(token){
+  try{
+    const url=new URL(window.location.href);
+    if(token) url.searchParams.set('token',token);
+    else url.searchParams.delete('token');
+    history.replaceState(null,'',url.pathname+url.search+url.hash);
+  }catch(e){}
+}
+
+document.getElementById('studentProfileBtn').addEventListener('click',async()=>{
+  const link=selectedStudentProfileLink();
+  if(!link){
+    alert('Seleccioná un alumno/a primero.');
+    return;
+  }
+  const ok=await flushAllPending();
+  if(ok===false){
+    alert('No se pudo completar un guardado pendiente. Volvé a intentar.');
+    return;
+  }
+  window.location.href=link;
+});
 
 document.getElementById('viewFullRoutineBtn').addEventListener('click',async()=>{
   const link=selectedFullRoutineLink();
@@ -1480,8 +1510,10 @@ function renderWorkspace(){
     const copyBtn=document.getElementById('copySelectedStudentLinkBtn');
     const viewBtn=document.getElementById('viewFullRoutineBtn');
     const managementBtn=document.getElementById('studentManagementBtn');
+    const profileBtn=document.getElementById('studentProfileBtn');
     if(copyBtn) copyBtn.disabled=true;
     if(viewBtn) viewBtn.disabled=true;
+    if(profileBtn) profileBtn.disabled=true;
     if(managementBtn) managementBtn.disabled=true;
     return;
   }
@@ -1489,8 +1521,10 @@ function renderWorkspace(){
   const copyBtn=document.getElementById('copySelectedStudentLinkBtn');
   const viewBtn=document.getElementById('viewFullRoutineBtn');
   const managementBtn=document.getElementById('studentManagementBtn');
+  const profileBtn=document.getElementById('studentProfileBtn');
   if(copyBtn) copyBtn.disabled=false;
   if(viewBtn) viewBtn.disabled=false;
+  if(profileBtn) profileBtn.disabled=false;
   if(managementBtn) managementBtn.disabled=false;
 
   visibleDays=DAY_ORDER.filter(d=>visibleDays.includes(d) || routines[d].length);
@@ -1759,6 +1793,7 @@ document.getElementById('student').addEventListener('change',async(e)=>{
     e.target.value=newToken;
   }
   loadCurrentRoutinesForStudent();
+  syncStudentTokenInUrl(newToken);
 });
 
 function pad2(n){ return String(n).padStart(2,'0'); }
@@ -1949,10 +1984,12 @@ async function commitDay(day){
     studentStates=parseCSV(await stateRes.text());
     dayNameRows=parseCSV(await dayNamesRes.text());
 
-    populateStudents();
+    const requestedToken=(new URLSearchParams(location.search).get('token')||'').trim();
+    populateStudents(requestedToken);
 
     if(document.getElementById('student').value){
       loadCurrentRoutinesForStudent();
+      syncStudentTokenInUrl(document.getElementById('student').value);
     }else{
       renderWorkspace();
     }
