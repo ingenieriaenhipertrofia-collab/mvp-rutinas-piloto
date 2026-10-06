@@ -78,7 +78,10 @@ button{border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:poin
 @media(max-width:700px){.block-type-row{grid-template-columns:1fr 1fr}.item{align-items:flex-start}.item-actions{min-width:110px}}
 
 
-.week-header{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:14px}
+.week-header{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:14px}
+.week-header-info{min-width:0}
+.week-header-action{display:flex;align-items:center;justify-content:flex-end;flex:0 0 auto}
+.profile-access-btn{white-space:nowrap;padding:11px 14px;font-weight:800}
 .week-title{margin:0;font-size:22px}
 .week-summary{font-size:13px;color:var(--muted)}
 .day-card{border:1px solid #d8dde3;border-radius:16px;background:#f3f5f7;margin-bottom:14px;overflow:hidden}
@@ -125,7 +128,9 @@ button:disabled{cursor:not-allowed;opacity:1}
 @media(max-width:700px){.super-top-grid,.super-ex-grid{grid-template-columns:1fr}}
 .rename-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){
-  .week-header{align-items:flex-start;flex-direction:column}
+  .week-header{align-items:stretch;flex-direction:column}
+  .week-header-action{justify-content:flex-start}
+  .profile-access-btn{width:auto}
   .day-head{align-items:flex-start}
   .day-head-actions{max-width:45%}
   .routine-row{flex-direction:column}
@@ -331,7 +336,6 @@ button:focus-visible{
       <div class="new-student-row" style="gap:8px;flex-wrap:wrap">
         <button id="copySelectedStudentLinkBtn" class="link-button" type="button">Copiar enlace para alumna</button>
         <button id="viewFullRoutineBtn" class="link-button" type="button">Ver rutina completa</button>
-        <button id="studentProfileBtn" class="link-button" type="button">Ficha del alumno/a</button>
         <button id="newStudentBtn" class="link-button" type="button">＋ Nueva alumna</button>
       </div>
     </div>
@@ -339,10 +343,13 @@ button:focus-visible{
 
   <div class="card">
     <div class="week-header">
-      <div>
+      <div class="week-header-info">
         <h2 class="week-title">Rutina actual</h2>
         <div id="studentObjective" class="week-summary" style="margin-top:4px"></div>
         <div id="weekSummary" class="week-summary">Cargando rutina…</div>
+      </div>
+      <div class="week-header-action">
+        <button id="studentProfileBtn" class="link-button profile-access-btn" type="button">Ficha del alumno/a</button>
       </div>
     </div>
     <div id="routineWorkspace"></div>
