@@ -345,6 +345,27 @@ button:hover{transform:translateY(-1px)}
   .card{padding:16px!important;border-radius:16px!important}
 }
 
+
+/* === VERSION DEFINITIVA · NAVEGACIÓN Y SINCRONIZACIÓN === */
+.dietas-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.dietas-toolbar h2{margin:0!important}
+.alumna-selector-wrap{margin-top:14px;max-width:480px}
+.alumna-selector-wrap label{display:block;margin-bottom:6px}
+#alumnaSelector{width:100%;padding:11px 12px}
+.cloud-line{margin-top:10px;font-size:12px;color:var(--brand-muted)}
+.template-hint{font-size:11px;color:var(--brand-muted);margin-top:5px}
+.p-brand-head{display:flex;align-items:center;gap:16px;border-bottom:2px solid var(--brand-pink);padding-bottom:14px;margin-bottom:18px}
+.p-brand-logo{width:92px;height:auto;flex:0 0 auto}
+.p-brand-copy h1{margin:0;font-size:20px;color:var(--brand-ink);letter-spacing:.04em}
+.p-brand-copy .p-sub{margin-top:5px}
+@media(max-width:640px){
+  .p-brand-logo{width:72px}
+  .p-brand-copy h1{font-size:16px}
+}
+@media print{
+  .p-brand-head{break-inside:avoid}
+}
+
 </style>
 </head>
 <body>
@@ -360,23 +381,31 @@ button:hover{transform:translateY(-1px)}
 
 <main>
   <div class="card">
-    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-      <h2 style="margin:0">Mis dietas</h2>
+    <div class="dietas-toolbar">
+      <h2>Dietas</h2>
       <button class="primary" onclick="nuevaDieta()">+ Nueva dieta</button>
     </div>
-    <div id="biblioteca" class="library"></div>
+    <div class="alumna-selector-wrap">
+      <label for="alumnaSelector">Alumnas</label>
+      <select id="alumnaSelector" onchange="seleccionarAlumnaSuperior(this.value)">
+        <option value="">Seleccionar alumna…</option>
+      </select>
+    </div>
+    <div id="cloudStatus" class="cloud-line">☁️ Conectando con Google…</div>
   </div>
-
   <div class="card">
     <h2>Datos generales</h2>
     <div class="grid">
       <div>
         <label>Alumno/a</label>
-        <input id="alumno" placeholder="Ej.: Giuliana">
+        <input id="alumno" list="alumnasSugeridas" autocomplete="off" placeholder="Ej.: Giuliana">
+        <datalist id="alumnasSugeridas"></datalist>
       </div>
       <div>
         <label>Título del plan</label>
-        <input id="titulo" placeholder="Ej.: Campeonato Cordobés 2026">
+        <input id="titulo" list="titulosSugeridos" autocomplete="off" placeholder="Ej.: Campeonato Cordobés 2026">
+        <datalist id="titulosSugeridos"></datalist>
+        <div class="template-hint">Podés escribir un título nuevo o elegir uno ya utilizado para cargar sus comidas como plantilla.</div>
       </div>
       <div>
         <label>Peso actual</label>
@@ -409,15 +438,9 @@ button:hover{transform:translateY(-1px)}
     <div class="actions">
       <button class="primary" onclick="guardarDieta()">Guardar dieta</button>
       <button class="secondary" onclick="generarVistaPrevia()">Vista previa</button>
-      <button class="secondary" onclick="exportar()">Exportar datos</button>
-      <button class="secondary" onclick="exportarBiblioteca()">Exportar biblioteca</button>
-      <button class="secondary" onclick="document.getElementById('importLibraryFile').click()">Importar biblioteca</button>
-      <input id="importLibraryFile" type="file" accept=".json,application/json" style="display:none" onchange="importarBiblioteca(event)">
       <button class="danger" onclick="limpiarFormulario()">Limpiar formulario</button>
     </div>
-    <div id="estado" class="status">Biblioteca local de dietas con guardar, abrir, duplicar, renombrar y eliminar.</div>
-    <div id="backupStatus" class="status" style="margin-top:8px">Las dietas se guardan localmente como respaldo.</div>
-<div id="cloudStatus" class="status" style="margin-top:6px">☁️ Conectando con Google…</div>
+    <div id="estado" class="status">Listo para trabajar.</div>
   </div>
 
   <div id="previewWrap">
@@ -718,160 +741,273 @@ function obtenerDatos(){
 }
 
 function volcarDatos(d){
+  suppressEvents=true;
   setv('alumno',d.alumno);setv('titulo',d.titulo);setv('peso',d.peso);
   setv('fecha',d.fecha);setv('cardio',d.cardio);setv('observaciones',d.observaciones);
   document.getElementById('comidas').innerHTML='';
   (d.comidas||[]).forEach(c=>agregarComida(c));
   if(!(d.comidas||[]).length) agregarComida({nombre:'Desayuno'});
-renderBiblioteca();
+  lastTitleValue=normalizarTexto(d.titulo||'');
+  setTimeout(()=>{suppressEvents=false;},0);
 }
 
-
-const LIB_KEY='rp_biblioteca_dietas_v1';
+const CLOUD_API='https://script.google.com/macros/s/AKfycbztxHuvb5t-qytQzlgtRUxhuasgUAPe4UPPAnQ9Xqhd-VJ2130qJvpCG4FYhN2AOY_KGg/exec';
+const CACHE_KEY='rp_dietas_google_cache_v2';
+let dietasDisponibles=[];
 let currentPlanId=null;
+let currentMode='new'; // new | open | replace
+let suppressEvents=false;
+let lastTitleValue='';
+const pendingRequests=new Map();
 
-function leerBiblioteca(){
-  try{return JSON.parse(localStorage.getItem(LIB_KEY)||'[]');}
-  catch(e){return [];}
+function normalizarTexto(v){
+  return String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
 }
-function escribirBiblioteca(lista){
-  localStorage.setItem(LIB_KEY,JSON.stringify(lista));
-}
-function generarId(){
-  return 'plan_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-}
-function guardarDieta(){
-  const d=obtenerDatos();
-  if(!d.alumno && !d.titulo){
-    alert('Ingresá al menos el nombre del alumno/a o el título del plan.');
-    return;
-  }
-  const lista=leerBiblioteca();
-  const ahora=new Date().toISOString();
+function generarId(){return 'plan_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)}
+function leerCache(){try{return JSON.parse(localStorage.getItem(CACHE_KEY)||'[]')}catch(e){return []}}
+function escribirCache(lista){localStorage.setItem(CACHE_KEY,JSON.stringify(lista||[]))}
+function ahoraISO(){return new Date().toISOString()}
 
-  if(currentPlanId){
-    const idx=lista.findIndex(x=>x.id===currentPlanId);
-    if(idx>=0){
-      lista[idx]={...lista[idx],datos:d,actualizado:ahora};
+window.addEventListener('message',ev=>{
+  const d=ev.data;
+  if(!d || d.app!=='RP_ALIMENTACION' || !d.requestId)return;
+  const p=pendingRequests.get(d.requestId);
+  if(!p)return;
+  pendingRequests.delete(d.requestId);
+  clearTimeout(p.timer);
+  if(d.ok)p.resolve(d);else p.reject(new Error(d.error||'Error de Google'));
+});
+
+function llamarGoogle(method,params={}){
+  return new Promise((resolve,reject)=>{
+    const requestId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const iframeName='rp_iframe_'+requestId;
+    const iframe=document.createElement('iframe');
+    iframe.name=iframeName;
+    iframe.style.display='none';
+    document.body.appendChild(iframe);
+
+    const form=document.createElement('form');
+    form.method=method;
+    form.action=CLOUD_API;
+    form.target=iframeName;
+    form.style.display='none';
+
+    const all={...params,requestId};
+    Object.entries(all).forEach(([k,v])=>{
+      const input=document.createElement('input');
+      input.type='hidden';input.name=k;input.value=v==null?'':String(v);
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+
+    const timer=setTimeout(()=>{
+      pendingRequests.delete(requestId);
+      form.remove();setTimeout(()=>iframe.remove(),200);
+      reject(new Error('Google no respondió a tiempo.'));
+    },20000);
+
+    pendingRequests.set(requestId,{resolve:(x)=>{form.remove();setTimeout(()=>iframe.remove(),200);resolve(x)},reject:(e)=>{form.remove();setTimeout(()=>iframe.remove(),200);reject(e)},timer});
+    form.submit();
+  });
+}
+
+function deduplicarPorAlumna(lista){
+  const map=new Map();
+  (lista||[]).forEach(x=>{
+    const d=x.datos||{};
+    const nombre=d.alumno||x.alumno||'';
+    const key=normalizarTexto(nombre);
+    if(!key)return;
+    const prev=map.get(key);
+    const t=x.actualizado||'';
+    if(!prev || t>(prev.actualizado||'')) map.set(key,x);
+  });
+  return [...map.values()].sort((a,b)=>{
+    const na=(a.datos?.alumno||a.alumno||'').localeCompare(b.datos?.alumno||b.alumno||'','es',{sensitivity:'base'});
+    return na;
+  });
+}
+
+async function sincronizarDesdeGoogle(){
+  cloudEstado('☁️ Sincronizando con Google…');
+  try{
+    const r=await llamarGoogle('GET',{action:'list'});
+    const remotas=(r.dietas||[]).map(x=>({
+      id:String(x.id||''),
+      datos:x.datos||{},
+      actualizado:x.actualizado||'',
+      creado:x.actualizado||''
+    }));
+    if(remotas.length){
+      dietasDisponibles=deduplicarPorAlumna(remotas);
+      escribirCache(dietasDisponibles);
     }else{
-      currentPlanId=generarId();
-      lista.push({id:currentPlanId,datos:d,creado:ahora,actualizado:ahora});
+      dietasDisponibles=deduplicarPorAlumna(leerCache());
     }
-  }else{
-    currentPlanId=generarId();
-    lista.push({id:currentPlanId,datos:d,creado:ahora,actualizado:ahora});
+    refrescarSelectores();
+    cloudEstado('☁️ Sincronizado con Google · '+dietasDisponibles.length+' alumna(s)');
+  }catch(err){
+    console.error(err);
+    dietasDisponibles=deduplicarPorAlumna(leerCache());
+    refrescarSelectores();
+    cloudEstado('⚠️ Sin conexión con Google · usando copia local');
   }
-
-  escribirBiblioteca(lista);
-  renderBiblioteca();
-  const guardada=lista.find(x=>x.id===currentPlanId);
-  if(guardada) guardarItemEnGoogle(guardada);
-  estado('✅ Dieta guardada.');
 }
-function abrirDieta(id){
-  const item=leerBiblioteca().find(x=>x.id===id);
+
+function cloudEstado(t){const el=document.getElementById('cloudStatus');if(el)el.textContent=t}
+
+function refrescarSelectores(){
+  const select=document.getElementById('alumnaSelector');
+  const actual=select.value;
+  const alumnas=dietasDisponibles.map(x=>x.datos?.alumno||'').filter(Boolean).sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+  select.innerHTML='<option value="">Seleccionar alumna…</option>'+alumnas.map(n=>`<option value="${attr(n)}">${esc(n)}</option>`).join('');
+  if(alumnas.some(n=>normalizarTexto(n)===normalizarTexto(actual)))select.value=actual;
+
+  document.getElementById('alumnasSugeridas').innerHTML=alumnas.map(n=>`<option value="${attr(n)}"></option>`).join('');
+
+  const titulos=[...new Set(dietasDisponibles.map(x=>x.datos?.titulo||'').filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
+  document.getElementById('titulosSugeridos').innerHTML=titulos.map(t=>`<option value="${attr(t)}"></option>`).join('');
+}
+
+function buscarAlumna(nombre){
+  const key=normalizarTexto(nombre);
+  return dietasDisponibles.find(x=>normalizarTexto(x.datos?.alumno||'')===key)||null;
+}
+
+function seleccionarAlumnaSuperior(nombre){
+  if(!nombre)return;
+  const item=buscarAlumna(nombre);
   if(!item)return;
-  currentPlanId=id;
-  volcarDatos(item.datos||{});
+  currentPlanId=item.id;
+  currentMode='open';
+  volcarDatos(JSON.parse(JSON.stringify(item.datos||{})));
   document.getElementById('previewWrap').style.display='none';
-  renderBiblioteca();
-  estado('✅ Dieta abierta para edición.');
+  estado('✅ Dieta vigente de '+(item.datos?.alumno||nombre)+' cargada.');
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function duplicarDieta(id){
-  const lista=leerBiblioteca();
-  const original=lista.find(x=>x.id===id);
-  if(!original)return;
-  const copia=JSON.parse(JSON.stringify(original.datos||{}));
-  copia.titulo=copia.titulo?copia.titulo+' · copia':'Copia';
-  const ahora=new Date().toISOString();
-  const nuevoId=generarId();
-  lista.push({id:nuevoId,datos:copia,creado:ahora,actualizado:ahora});
-  escribirBiblioteca(lista);
-  currentPlanId=nuevoId;
-  volcarDatos(copia);
-  renderBiblioteca();
-  const duplicada=lista.find(x=>x.id===nuevoId);
-  if(duplicada) guardarItemEnGoogle(duplicada);
-  estado('✅ Dieta duplicada. Estás editando la copia.');
-}
-function renombrarDieta(id){
-  const lista=leerBiblioteca();
-  const item=lista.find(x=>x.id===id);
-  if(!item)return;
-  const actual=(item.datos&&item.datos.titulo)||'';
-  const nuevo=prompt('Nuevo título del plan:',actual);
-  if(nuevo===null)return;
-  item.datos=item.datos||{};
-  item.datos.titulo=nuevo.trim();
-  item.actualizado=new Date().toISOString();
-  escribirBiblioteca(lista);
-  if(currentPlanId===id)document.getElementById('titulo').value=nuevo.trim();
-  renderBiblioteca();
-  guardarItemEnGoogle(item);
-  estado('✅ Dieta renombrada.');
-}
-function eliminarDieta(id){
-  const lista=leerBiblioteca();
-  const item=lista.find(x=>x.id===id);
-  if(!item)return;
-  const d=item.datos||{};
-  const nombre=[d.alumno,d.titulo].filter(Boolean).join(' · ')||'esta dieta';
-  if(!confirm('¿Eliminar '+nombre+'?'))return;
-  escribirBiblioteca(lista.filter(x=>x.id!==id));
-  if(currentPlanId===id)currentPlanId=null;
-  renderBiblioteca();
-  eliminarItemEnGoogle(id);
-  estado('Dieta eliminada.');
-}
+
 function nuevaDieta(){
   currentPlanId=null;
+  currentMode='new';
+  document.getElementById('alumnaSelector').value='';
   volcarDatos({comidas:[]});
   document.getElementById('previewWrap').style.display='none';
-  renderBiblioteca();
-  estado('Nueva dieta lista para cargar.');
-}
-function limpiarFormulario(){
-  if(!confirm('¿Querés limpiar los campos de la dieta actual?'))return;
-  volcarDatos({comidas:[]});
-  document.getElementById('previewWrap').style.display='none';
-  estado('Formulario limpio.');
-}
-function renderBiblioteca(){
-  const cont=document.getElementById('biblioteca');
-  const lista=leerBiblioteca().slice().sort((a,b)=>(b.actualizado||'').localeCompare(a.actualizado||''));
-  if(!lista.length){
-    cont.innerHTML='<div class="library-empty">Todavía no hay dietas guardadas. Cargá una dieta y tocá <b>Guardar dieta</b>.</div>';
-    return;
-  }
-  cont.innerHTML=lista.map(x=>{
-    const d=x.datos||{};
-    const titulo=esc(d.titulo||'Plan sin título');
-    const alumno=esc(d.alumno||'Sin alumno/a');
-    const fecha=d.fecha?new Date(d.fecha+'T00:00:00').toLocaleDateString('es-AR'):'Sin fecha';
-    const activa=x.id===currentPlanId?'<span class="active-badge">abierta</span>':'';
-    return `<div class="diet-card">
-      <h3>${titulo}${activa}</h3>
-      <div class="meta">${alumno}<br>${esc(fecha)}</div>
-      <div class="card-actions">
-        <button class="primary" onclick="abrirDieta('${x.id}')">Abrir</button>
-        <button class="secondary" onclick="duplicarDieta('${x.id}')">Duplicar</button>
-        <button class="secondary" onclick="renombrarDieta('${x.id}')">Renombrar</button>
-        <button class="danger" onclick="eliminarDieta('${x.id}')">Eliminar</button>
-      </div>
-    </div>`;
-  }).join('');
+  estado('Nueva dieta lista. Escribí o seleccioná una alumna.');
+  setTimeout(()=>document.getElementById('alumno').focus(),50);
 }
 
-function exportar(){
-  const blob=new Blob([JSON.stringify(obtenerDatos(),null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='plan_alimentacion_v8.json';
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  estado('✅ Datos exportados.');
+function manejarAlumnoEscrito(){
+  if(suppressEvents || currentMode!=='new')return;
+  const nombre=val('alumno');
+  const item=buscarAlumna(nombre);
+  if(!item)return;
+  currentPlanId=item.id;
+  currentMode='replace';
+  volcarDatos(JSON.parse(JSON.stringify(item.datos||{})));
+  document.getElementById('alumno').value=item.datos?.alumno||nombre;
+  estado('Dieta vigente cargada como base. Al guardar, reemplazará la dieta anterior de esta alumna.');
 }
+
+function buscarPlantillaPorTitulo(titulo){
+  const key=normalizarTexto(titulo);
+  return dietasDisponibles
+    .filter(x=>normalizarTexto(x.datos?.titulo||'')===key)
+    .sort((a,b)=>(b.actualizado||'').localeCompare(a.actualizado||''))[0]||null;
+}
+
+function comidasTienenContenido(){
+  const d=obtenerDatos();
+  return (d.comidas||[]).some(c=>
+    (c.timing||'').trim() ||
+    (c.opciones||[]).some(o=>(o.items||[]).some(i=>
+      (i.cantidad||'').trim() || (i.alimento||'').trim() || (i.estado||'').trim() || (i.nota||'').trim()
+    ))
+  );
+}
+
+function manejarTituloSeleccionado(){
+  if(suppressEvents)return;
+  const titulo=val('titulo');
+  const key=normalizarTexto(titulo);
+  if(!key || key===lastTitleValue)return;
+  const plantilla=buscarPlantillaPorTitulo(titulo);
+  if(!plantilla){lastTitleValue=key;return;}
+
+  if(comidasTienenContenido()){
+    const ok=confirm('¿Cargar las comidas asociadas a este título?\n\nLas comidas actualmente cargadas serán reemplazadas. Los datos generales de la alumna se mantendrán.');
+    if(!ok){lastTitleValue=key;return;}
+  }
+
+  suppressEvents=true;
+  document.getElementById('comidas').innerHTML='';
+  const comidas=JSON.parse(JSON.stringify(plantilla.datos?.comidas||[]));
+  comidas.forEach(c=>agregarComida(c));
+  if(!comidas.length)agregarComida({nombre:'Desayuno'});
+  setTimeout(()=>{suppressEvents=false;},0);
+  lastTitleValue=key;
+  estado('✅ Comidas cargadas desde el plan "'+titulo+'". Los datos generales no fueron modificados.');
+}
+
+async function guardarDieta(){
+  const d=obtenerDatos();
+  if(!d.alumno){alert('Ingresá el nombre de la alumna.');return;}
+
+  const existente=buscarAlumna(d.alumno);
+  let mensaje='¿Confirmás guardar esta dieta?';
+  if(existente){
+    mensaje='¿Confirmás guardar esta dieta?\n\nAl continuar, la dieta anterior de '+(existente.datos?.alumno||d.alumno)+' será reemplazada por la nueva versión.';
+  }
+  if(!confirm(mensaje))return;
+
+  const id=existente?.id || currentPlanId || generarId();
+  const ahora=ahoraISO();
+  const localItem={id,datos:d,actualizado:ahora,creado:existente?.creado||ahora};
+
+  // Mantener una sola dieta por alumna también en la copia local.
+  dietasDisponibles=deduplicarPorAlumna([
+    ...dietasDisponibles.filter(x=>normalizarTexto(x.datos?.alumno||'')!==normalizarTexto(d.alumno)),
+    localItem
+  ]);
+  escribirCache(dietasDisponibles);
+  refrescarSelectores();
+  currentPlanId=id;
+  currentMode='open';
+  document.getElementById('alumnaSelector').value=d.alumno;
+
+  cloudEstado('☁️ Guardando en Google…');
+  estado('Guardando dieta…');
+  try{
+    const r=await llamarGoogle('POST',{
+      action:'save',id,alumno:d.alumno,titulo:d.titulo,fecha:d.fecha,datos:JSON.stringify(d)
+    });
+    currentPlanId=r.id||id;
+    estado('✅ Dieta guardada.');
+    cloudEstado('☁️ Guardado en Google');
+    await sincronizarDesdeGoogle();
+  }catch(err){
+    console.error(err);
+    estado('⚠️ La dieta quedó guardada localmente, pero Google no confirmó el guardado.');
+    cloudEstado('⚠️ Pendiente de sincronizar con Google');
+  }
+}
+
+function limpiarFormulario(){
+  if(!confirm('¿Querés limpiar todo el formulario?\n\nSe borrarán todos los datos cargados que todavía no hayas guardado.'))return;
+  currentPlanId=null;
+  currentMode='new';
+  document.getElementById('alumnaSelector').value='';
+  volcarDatos({comidas:[]});
+  document.getElementById('previewWrap').style.display='none';
+  estado('Formulario limpio. Listo para una nueva dieta.');
+}
+
+function estado(t){document.getElementById('estado').textContent=t}
+function val(id){return document.getElementById(id).value.trim()}
+function setv(id,v){document.getElementById(id).value=v||''}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function attr(s){return esc(s)}
 
 function generarVistaPrevia(){
   const d=obtenerDatos();
@@ -916,9 +1052,12 @@ function generarVistaPrevia(){
   const fecha=d.fecha?new Date(d.fecha+'T00:00:00').toLocaleDateString('es-AR'):'';
 
   document.getElementById('preview').innerHTML=`
-    <div class="p-head">
-      <h1>ROMINA PIZARRO · ENTRENADORA PROFESIONAL</h1>
-      <div class="p-sub">Planificación de alimentación individualizada</div>
+    <div class="p-brand-head">
+      <img class="p-brand-logo" src="${document.querySelector('.brand-logo').src}" alt="Logo RP">
+      <div class="p-brand-copy">
+        <h1>ROMINA PIZARRO · ENTRENADORA PROFESIONAL</h1>
+        <div class="p-sub">Planificación de alimentación individualizada</div>
+      </div>
     </div>
     <div class="p-meta">
       <div><strong>Alumno/a</strong>${esc(d.alumno||'—')}</div>
@@ -977,200 +1116,10 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 function attr(s){return esc(s)}
 
 agregarComida({nombre:'Desayuno'});
-renderBiblioteca();
-
-function exportarBiblioteca(){
-  try{
-    const raw = localStorage.getItem('rp_biblioteca_dietas_v1');
-    const biblioteca = raw ? JSON.parse(raw) : [];
-    const payload = {
-      tipo: 'RP_BIBLIOTECA_DIETAS',
-      version: 1,
-      exportado_en: new Date().toISOString(),
-      dietas: biblioteca
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const fecha = new Date().toISOString().slice(0,10);
-    a.href = url;
-    a.download = `RP_biblioteca_dietas_${fecha}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 500);
-
-    const bs = document.getElementById('backupStatus');
-    if(bs) bs.textContent = 'Respaldo completo descargado correctamente.';
-  }catch(err){
-    alert('No se pudo exportar la biblioteca.');
-    console.error(err);
-  }
-}
-
-function importarBiblioteca(event){
-  const file = event.target.files && event.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function(){
-    try{
-      const parsed = JSON.parse(reader.result);
-      const dietas = Array.isArray(parsed)
-        ? parsed
-        : (parsed && Array.isArray(parsed.dietas) ? parsed.dietas : null);
-
-      if(!dietas) throw new Error('Formato inválido');
-
-      const actualesRaw = localStorage.getItem('rp_biblioteca_dietas_v1');
-      const actuales = actualesRaw ? JSON.parse(actualesRaw) : [];
-
-      const reemplazar = confirm(
-        `El archivo contiene ${dietas.length} dieta(s).\n\n` +
-        `Aceptar: reemplazar la biblioteca actual.\n` +
-        `Cancelar: combinar con la biblioteca actual.`
-      );
-
-      let finalDietas;
-
-      if(reemplazar){
-        finalDietas = dietas;
-      }else{
-        const porId = new Map();
-
-        [...actuales, ...dietas].forEach(d => {
-          let id = d && d.id
-            ? String(d.id)
-            : `import_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
-          porId.set(id, {...d, id});
-        });
-
-        finalDietas = Array.from(porId.values());
-      }
-
-      localStorage.setItem('rp_biblioteca_dietas_v1', JSON.stringify(finalDietas));
-
-      if(typeof renderBiblioteca === 'function'){
-        
-const CLOUD_API = 'https://script.google.com/macros/s/AKfycbztxHuvb5t-qytQzlgtRUxhuasgUAPe4UPPAnQ9Xqhd-VJ2130qJvpCG4FYhN2AOY_KGg/exec';
-
-function cloudStatus(msg){
-  const el=document.getElementById('cloudStatus');
-  if(el) el.textContent=msg;
-}
-
-function cloudList(){
-  return new Promise((resolve,reject)=>{
-    const cb='rp_cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const script=document.createElement('script');
-    const timer=setTimeout(()=>{
-      cleanup();
-      reject(new Error('Tiempo de espera agotado'));
-    },12000);
-
-    function cleanup(){
-      clearTimeout(timer);
-      try{ delete window[cb]; }catch(e){}
-      if(script.parentNode) script.parentNode.removeChild(script);
-    }
-
-    window[cb]=(res)=>{
-      cleanup();
-      if(res && res.ok) resolve(res.dietas||[]);
-      else reject(new Error((res&&res.error)||'No se pudo leer la nube'));
-    };
-
-    script.onerror=()=>{
-      cleanup();
-      reject(new Error('No se pudo conectar con Google'));
-    };
-
-    script.src=CLOUD_API+'?action=list&callback='+encodeURIComponent(cb)+'&_='+Date.now();
-    document.head.appendChild(script);
-  });
-}
-
-async function cloudPost(params){
-  const body=new URLSearchParams(params);
-  await fetch(CLOUD_API,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body
-  });
-}
-
-async function sincronizarDesdeGoogle(){
-  try{
-    cloudStatus('☁️ Sincronizando con Google…');
-    const remotas=await cloudList();
-
-    const lista=remotas.map(r=>({
-      id:String(r.id),
-      datos:r.datos||{},
-      creado:r.actualizado||new Date().toISOString(),
-      actualizado:r.actualizado||new Date().toISOString()
-    }));
-
-    escribirBiblioteca(lista);
-    renderBiblioteca();
-    cloudStatus('☁️ Sincronizado con Google · '+lista.length+' dieta(s)');
-  }catch(err){
-    console.error(err);
-    cloudStatus('⚠️ Sin conexión con Google · usando respaldo local');
-  }
-}
-
-async function guardarItemEnGoogle(item){
-  const d=item.datos||{};
-  try{
-    cloudStatus('☁️ Guardando en Google…');
-    await cloudPost({
-      action:'save',
-      id:item.id,
-      alumno:d.alumno||'',
-      titulo:d.titulo||'',
-      fecha:d.fecha||'',
-      datos:JSON.stringify(d)
-    });
-    cloudStatus('☁️ Guardado en Google');
-  }catch(err){
-    console.error(err);
-    cloudStatus('⚠️ No se pudo guardar en Google · quedó respaldo local');
-  }
-}
-
-async function eliminarItemEnGoogle(id){
-  try{
-    cloudStatus('☁️ Eliminando de Google…');
-    await cloudPost({action:'delete',id:id});
-    cloudStatus('☁️ Eliminado de Google');
-  }catch(err){
-    console.error(err);
-    cloudStatus('⚠️ No se pudo eliminar en Google');
-  }
-}
-
-renderBiblioteca();
+refrescarSelectores();
 sincronizarDesdeGoogle();
-      }
-
-      const bs = document.getElementById('backupStatus');
-      if(bs) bs.textContent = `Biblioteca importada: ${finalDietas.length} dieta(s).`;
-
-      alert('Biblioteca importada correctamente.');
-    }catch(err){
-      alert('Ese archivo no parece ser un respaldo válido de la biblioteca.');
-      console.error(err);
-    }finally{
-      event.target.value = '';
-    }
-  };
-
-  reader.readAsText(file);
-}
-
+document.getElementById('alumno').addEventListener('change',manejarAlumnoEscrito);
+document.getElementById('titulo').addEventListener('change',manejarTituloSeleccionado);
 </script>
 </body>
 </html>
