@@ -6,15 +6,16 @@
 <title>Rutina · Romina Pizarro</title>
 <style>
 :root{
-  --bg:#f2f4f6;
+  --bg:#f4f5f6;
   --card:#ffffff;
-  --ink:#161a1f;
-  --muted:#6b7280;
-  --line:#dfe3e8;
-  --soft:#f6f7f8;
+  --ink:#14212b;
+  --gold:#c5a548;
+  --muted:#6f7a82;
+  --line:#d9dee2;
+  --soft:#f7f8f9;
   --day:#eef1f4;
   --day-head:#e5e9ed;
-  --accent:#171c22;
+  --accent:#14212b;
   --note:#fff8e7;
   --note-line:#e7d7a6;
 }
@@ -26,17 +27,20 @@ body{
   font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 .header{
-  padding:28px 18px 20px;
-  text-align:center;
+  background:var(--ink);
+  color:#fff;
+  padding:20px 18px 16px;
+  border-bottom:3px solid var(--gold);
+  text-align:left;
 }
 .header h1{
   margin:0;
-  font-size:18px;
-  letter-spacing:.08em;
+  font-size:21px;
+  letter-spacing:0;
 }
 .header p{
-  margin:7px 0 0;
-  color:var(--muted);
+  margin:4px 0 0;
+  color:var(--gold);
   font-size:13px;
 }
 .wrap{
@@ -75,6 +79,15 @@ body{
   color:var(--muted);
   font-weight:700;
 }
+.summary-block{
+  text-align:right;
+}
+.updated-date{
+  margin-top:3px;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:600;
+}
 .day-card{
   background:var(--day);
   border:1px solid #d8dde3;
@@ -112,6 +125,8 @@ body{
   font-weight:850;
   font-size:16px;
 }
+.exercise-top,.super-ex-top{display:block}
+.exercise-head-main,.super-ex-head-main{min-width:0}
 .exercise-meta{
   display:flex;
   gap:8px;
@@ -167,9 +182,11 @@ body{
   font-size:16px;
 }
 .super-sub{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:3px;
+  color:var(--ink);
+  font-size:14px;
+  font-weight:800;
+  margin-top:6px;
+  line-height:1.2;
 }
 .super-list{
   margin-top:12px;
@@ -203,13 +220,195 @@ body{
   font-size:11px;
   padding:18px 0 0;
 }
+.pdf-actions{
+  display:flex;
+  justify-content:center;
+  padding:12px 0 2px;
+}
+.pdf-btn{
+  border:0;
+  border-radius:10px;
+  padding:12px 18px;
+  background:var(--ink);
+  color:#fff;
+  font:inherit;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+}
+.pdf-btn:hover{opacity:.94}
+.pdf-export-root{
+  position:fixed;
+  left:-100000px;
+  top:0;
+  width:760px;
+  background:var(--bg);
+  z-index:-1;
+}
+.pdf-export-root .wrap{
+  max-width:760px;
+  width:100%;
+}
+.pdf-keys{
+  display:none;
+}
+.pdf-export-root .pdf-keys{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+.pdf-export-root .exercise-card,
+.pdf-export-root .super-ex{
+  padding:8px 8px;
+}
+.pdf-export-root .exercise-top,
+.pdf-export-root .super-ex-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.pdf-export-root .exercise-head-main,
+.pdf-export-root .super-ex-head-main{
+  min-width:0;
+  flex:1 1 auto;
+}
+.pdf-export-root .exercise-title,
+.pdf-export-root .super-ex-name{
+  font-size:20px;
+  line-height:1.12;
+}
+.pdf-export-root .exercise-meta{
+  margin-top:4px;
+  gap:4px;
+}
+.pdf-export-root .pill{
+  padding:4px 6px;
+  font-size:13px;
+  line-height:1.1;
+}
+.pdf-export-root .video{
+  margin-top:0;
+  flex:0 0 auto;
+  min-width:92px;
+  min-height:34px;
+  padding:8px 12px;
+  font-size:13px;
+  line-height:1.1;
+  border-radius:9px;
+  align-self:center;
+  justify-content:center;
+  align-items:center;
+}
+.pdf-export-root .note{
+  margin-top:6px;
+  padding:6px 8px;
+  font-size:14px;
+  line-height:1.22;
+}
+.pdf-export-root .pdf-keys{
+  gap:4px;
+  margin-top:6px;
+}
+.pdf-export-root .pdf-key{
+  padding:5px 6px;
+}
+.pdf-export-root .pdf-key-title{
+  font-size:11px;
+  line-height:1.1;
+  margin-bottom:2px;
+}
+.pdf-export-root .pdf-key-text{
+  font-size:14px;
+  line-height:1.2;
+}
+.pdf-export-root .day-body{
+  padding:8px;
+  gap:6px;
+}
+.pdf-export-root .super-list{
+  margin-top:6px;
+  gap:5px;
+}
+.pdf-export-root .super-ex-meta{
+  margin-top:3px;
+  font-size:13px;
+  line-height:1.15;
+}
+.pdf-export-root .day-card{
+  margin-top:10px;
+}
+.pdf-export-root .day-head{
+  padding:10px 11px;
+}
+.pdf-export-root .day-title{
+  font-size:19px;
+  line-height:1.1;
+}
+.pdf-export-root .day-meta{
+  margin-top:2px;
+  font-size:11.5px;
+}
+.pdf-export-root .main-card{
+  padding:12px;
+}
+.pdf-export-root .topline{
+  margin-bottom:10px;
+}
+.pdf-export-root .topline h2{
+  font-size:27px;
+  line-height:1.1;
+}
+.pdf-export-root .eyebrow{
+  font-size:11px;
+}
+.pdf-export-root .summary{
+  font-size:13px;
+}
+.pdf-export-root .updated-date{
+  font-size:11.5px;
+}
+.pdf-export-root .footer{
+  padding-top:10px;
+}
+.pdf-key{
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:9px 10px;
+  background:#fff;
+  min-width:0;
+}
+.pdf-key-title{
+  font-size:10px;
+  line-height:1.2;
+  font-weight:900;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+.pdf-key-text{
+  font-size:11px;
+  line-height:1.35;
+  color:var(--ink);
+  overflow-wrap:anywhere;
+}
+
 @media(max-width:640px){
   .main-card{padding:14px;border-radius:16px}
   .topline h2{font-size:22px}
   .day-body{padding:10px}
 }
+@media print{
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .main-card{box-shadow:none;border:0;border-radius:0;padding:14px 0}
+  .pdf-actions{display:none!important}
+  .header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 
-/* === ROMINA PIZARRO · BRANDING ROSA / GRAFITO · OVERRIDE FINAL === */
+/* === ROMINA PIZARRO · BRANDING PILOTO · OVERRIDE FINAL === */
 :root{
   --brand-bg:#F7F8FA;
   --brand-card:#FFFFFF;
@@ -220,8 +419,8 @@ body{
   --brand-pink:#F2558A;
   --brand-pink-deep:#B93462;
   --brand-pink-soft:#F8E8EE;
-  --brand-pink-soft-2:#FCEFF3;
-  --brand-charcoal:#17191D;
+  --brand-pink-soft-2:#FFF5F8;
+  --brand-charcoal:#1B1D22;
 }
 
 html,body{
@@ -230,21 +429,21 @@ html,body{
 }
 
 .header{
-  background:#1B1D22 !important;
+  background:var(--brand-charcoal) !important;
   color:#FFFFFF !important;
-  border-bottom:1px solid #2A2D33;
-  padding:12px 20px !important;
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:14px;
+  border-bottom:1px solid #2A2D33 !important;
+  padding:10px 14px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:10px !important;
   text-align:left !important;
 }
 
 .brand-logo{
   display:block;
-  width:130px;
-  max-width:35vw;
+  width:106px;
+  max-width:32vw;
   height:auto;
   margin:0;
   flex:0 0 auto;
@@ -256,16 +455,18 @@ html,body{
 
 .header h1{
   color:#FFFFFF !important;
-  font-size:15px !important;
-  line-height:1.35;
-  letter-spacing:.055em !important;
-  font-weight:850;
-  margin:0;
+  margin:0 !important;
+  font-size:12px !important;
+  line-height:1.28 !important;
+  letter-spacing:.04em !important;
+  font-weight:850 !important;
 }
 
 .header p{
   color:#D7D9DE !important;
   margin:5px 0 0 !important;
+  font-size:11px !important;
+  line-height:1.32 !important;
 }
 
 .main-card{
@@ -274,13 +475,20 @@ html,body{
   box-shadow:0 10px 28px rgba(23,25,29,.045) !important;
 }
 
-.topline h2{
+.topline h2,
+.exercise-title,
+.super-title,
+.super-ex-name,
+.day-title{
   color:var(--brand-ink) !important;
 }
 
-.topline,
 .summary,
-.eyebrow{
+.updated-date,
+.eyebrow,
+.day-meta,
+.super-ex-meta,
+.footer{
   color:var(--brand-muted) !important;
 }
 
@@ -299,31 +507,23 @@ html,body{
   color:var(--brand-ink) !important;
 }
 
-.day-title{
-  color:var(--brand-ink) !important;
-}
-
-.day-meta{
-  color:var(--brand-muted) !important;
-}
-
 .day-body{
   background:#FAFBFC !important;
 }
 
-.exercise,
 .exercise-card,
-.item,
-.row,
 .super-card{
   background:#FFFFFF !important;
   border-color:var(--brand-line) !important;
 }
 
-.exercise-title,
-.super-title,
-.super-ex-name{
-  color:var(--brand-ink) !important;
+.super-card{
+  border-left-color:var(--brand-pink) !important;
+}
+
+.super-ex{
+  background:#FAFAFB !important;
+  border-color:#E5E7EA !important;
 }
 
 .pill{
@@ -338,13 +538,12 @@ html,body{
   color:#4D4448 !important;
 }
 
-.super-card{
-  border-left-color:var(--brand-pink) !important;
-}
-
-.super-ex{
-  background:#FAFAFB !important;
-  border-color:#E5E7EA !important;
+.video{
+  border-color:var(--brand-pink) !important;
+  background:#FFF5F8 !important;
+  color:var(--brand-pink-deep) !important;
+  font-weight:900 !important;
+  box-shadow:0 1px 0 rgba(185,52,98,.05);
 }
 
 .super-sub{
@@ -354,55 +553,49 @@ html,body{
   margin-top:4px !important;
 }
 
-.super-ex-meta{
-  color:var(--brand-muted) !important;
+.pdf-btn{
+  background:var(--brand-pink-deep) !important;
+  color:#FFFFFF !important;
 }
 
-.video,
-.video-link,
-a{
+.pdf-btn:hover{
+  background:#A92B55 !important;
+  opacity:1 !important;
+}
+
+.pdf-key{
+  background:#FFFFFF !important;
+  border-color:var(--brand-line) !important;
+}
+
+.pdf-key-title{
   color:var(--brand-pink-deep) !important;
 }
 
-.video{
-  border-color:var(--brand-pink) !important;
-  background:#FFF5F8 !important;
-  color:var(--brand-pink-deep) !important;
-  font-weight:900 !important;
-  box-shadow:0 1px 0 rgba(185,52,98,.05);
+.pdf-key-text{
+  color:var(--brand-ink) !important;
 }
 
-.footer{
-  color:var(--brand-muted) !important;
-}
-
-.loading,.empty{
-  color:var(--brand-muted) !important;
-}
-
-.error{
-  color:#9B2C2C !important;
-}
-
-@media(max-width:640px){
-  .brand-logo{
-    width:106px;
-    max-width:32vw;
-  }
+@media(min-width:641px){
   .header{
-    padding:10px 14px !important;
-    gap:10px;
+    padding:12px 20px !important;
+    gap:14px !important;
+  }
+  .brand-logo{
+    width:130px;
+    max-width:35vw;
   }
   .header h1{
-    font-size:12px !important;
-    line-height:1.28;
-    letter-spacing:.04em !important;
+    font-size:15px !important;
+    line-height:1.35 !important;
+    letter-spacing:.055em !important;
   }
   .header p{
-    font-size:11px !important;
-    line-height:1.32;
+    font-size:13px !important;
+    line-height:1.35 !important;
   }
 }
+
 </style>
 </head>
 <body>
@@ -421,15 +614,24 @@ a{
         <div class="eyebrow">Rutina</div>
         <h2 id="studentName">Tu entrenamiento</h2>
       </div>
-      <div id="summary" class="summary"></div>
+      <div class="summary-block">
+        <div id="summary" class="summary"></div>
+        <div id="updatedDate" class="updated-date"></div>
+      </div>
     </div>
 
     <div id="loading" class="loading">Cargando rutina…</div>
     <div id="routine"></div>
   </div>
   <div class="footer">Rutina actualizada por tu entrenador.</div>
+  <div class="pdf-actions">
+    <button id="downloadPdfBtn" class="pdf-btn" type="button">Descargar como PDF</button>
+  </div>
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 const ROUTINES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1Beg305Pe0JKkMFCj-cKmyKxICGc4HnCUMy7aJQisCj2l0QgQG29ax30eBe7_eH8glAA6xjpweyGV/pub?gid=1251455005&single=true&output=csv';
 const ROUTINES_API = 'https://script.google.com/macros/s/AKfycby3MDDLPFN-AdYnTsk3xyfDopG3nAEGOpV_zl79_L-IQjPNi5bfPyUkhgbd4xFx01Lp/exec';
@@ -475,8 +677,38 @@ function esc(s){
 function dayTitle(day,labels){
   const cfg=labels[day];
   if(!cfg || !cfg.name) return 'Día '+day;
-  return cfg.type==='BLOQUE' ? 'Bloque · '+cfg.name : 'Día '+cfg.name;
+  return cfg.type==='BLOQUE' ? 'Bloque '+cfg.name : 'Día '+cfg.name;
 }
+
+function normalizedDaySortText(v){
+  return String(v||'').trim().toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'');
+}
+function weekdayIndexFromName(name){
+  const t=normalizedDaySortText(name);
+  const weekdays=['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+  for(let i=0;i<weekdays.length;i++){
+    if(new RegExp('(^|[^a-z])'+weekdays[i]+'([^a-z]|$)').test(t)) return i;
+  }
+  return -1;
+}
+function daySortName(day,labels){
+  const cfg=labels[day];
+  return String(cfg?.name || day || '').trim();
+}
+function compareDayIds(a,b,labels){
+  const an=daySortName(a,labels), bn=daySortName(b,labels);
+  const aw=weekdayIndexFromName(an), bw=weekdayIndexFromName(bn);
+
+  if(aw>=0 && bw>=0 && aw!==bw) return aw-bw;
+  if(aw>=0 && bw<0) return -1;
+  if(aw<0 && bw>=0) return 1;
+
+  const alpha=an.localeCompare(bn,'es',{sensitivity:'base',numeric:true});
+  if(alpha!==0) return alpha;
+  return DAY_ORDER.indexOf(a)-DAY_ORDER.indexOf(b);
+}
+
 function buildDayLabels(rows,token){
   const labels={};
   rows.forEach(r=>{
@@ -496,7 +728,10 @@ function enrich(rows,lib){
       {
         id_ejercicio:String(x.id_ejercicio||'').trim(),
         ejercicio:String(x.ejercicio||'').trim(),
-        video_url:String(x.video_url||'').trim()
+        video_url:String(x.video_url||'').trim(),
+        intencion:String(x.intencion||'').trim(),
+        sensacion:String(x.sensacion||'').trim(),
+        error_evitar:String(x.error_evitar||'').trim()
       }
     ])
   );
@@ -505,7 +740,10 @@ function enrich(rows,lib){
     return {
       ...r,
       ejercicio:r.ejercicio||libRow.ejercicio||'',
-      video_url:libRow.video_url||''
+      video_url:libRow.video_url||'',
+      intencion:libRow.intencion||'',
+      sensacion:libRow.sensacion||'',
+      error_evitar:libRow.error_evitar||''
     };
   });
 }
@@ -538,24 +776,58 @@ function metaPills(series,reps,tempo,load){
   if(load) parts.push(`<span class="pill">Carga inicial ${esc(load)}</span>`);
   return parts.join('');
 }
+function renderPdfKeys(ex){
+  const intention=String(ex.intencion||'').trim();
+  const sensation=String(ex.sensacion||'').trim();
+  const error=String(ex.error_evitar||'').trim();
+
+  if(!intention && !sensation && !error) return '';
+
+  return `
+    <div class="pdf-keys">
+      <div class="pdf-key">
+        <div class="pdf-key-title">Intención</div>
+        <div class="pdf-key-text">${esc(intention||'—')}</div>
+      </div>
+      <div class="pdf-key">
+        <div class="pdf-key-title">Sensación</div>
+        <div class="pdf-key-text">${esc(sensation||'—')}</div>
+      </div>
+      <div class="pdf-key">
+        <div class="pdf-key-title">Error a evitar</div>
+        <div class="pdf-key-text">${esc(error||'—')}</div>
+      </div>
+    </div>`;
+}
+
 function renderIndividual(block){
   const ex=block.items[0]||{};
   return `
     <div class="exercise-card">
-      <div class="exercise-title">${esc(ex.ejercicio||'Ejercicio')}</div>
-      <div class="exercise-meta">${metaPills(block.series,ex.reps,ex.tempo,ex.carga_inicial)}</div>
+      <div class="exercise-top">
+        <div class="exercise-head-main">
+          <div class="exercise-title">${esc(ex.ejercicio||'Ejercicio')}</div>
+          <div class="exercise-meta">${metaPills(block.series,ex.reps,ex.tempo,ex.carga_inicial)}</div>
+        </div>
+        ${ex.video_url?`<a class="video" href="${esc(ex.video_url)}" target="_blank" rel="noopener noreferrer">▶ Ver video</a>`:''}
+      </div>
       ${block.note?`<div class="note">${esc(block.note)}</div>`:''}
-      ${ex.video_url?`<a class="video" href="${esc(ex.video_url)}" target="_blank" rel="noopener noreferrer">▶ Ver video</a>`:''}
+      ${renderPdfKeys(ex)}
     </div>`;
 }
 function renderSuperset(block){
   const exercises=block.items.map((ex,i)=>`
     <div class="super-ex">
-      <div class="super-ex-name">${i+1}. ${esc(ex.ejercicio||'Ejercicio')}</div>
-      <div class="super-ex-meta">
-        ${esc(ex.reps||'—')} reps${ex.tempo?' · tempo '+esc(ex.tempo):''}${ex.carga_inicial?' · carga inicial '+esc(ex.carga_inicial):''}
+      <div class="super-ex-top">
+        <div class="super-ex-head-main">
+          <div class="super-ex-name">${i+1}. ${esc(ex.ejercicio||'Ejercicio')}</div>
+          <div class="super-ex-meta">
+            ${esc(ex.reps||'—')} reps${ex.tempo?' · tempo '+esc(ex.tempo):''}${ex.carga_inicial?' · carga inicial '+esc(ex.carga_inicial):''}
+          </div>
+        </div>
+        ${ex.video_url?`<a class="video" href="${esc(ex.video_url)}" target="_blank" rel="noopener noreferrer">▶ Ver video</a>`:''}
       </div>
-      ${ex.video_url?`<a class="video" href="${esc(ex.video_url)}" target="_blank" rel="noopener noreferrer">▶ Ver video</a>`:''}
+      ${renderPdfKeys(ex)}
     </div>`).join('');
   return `
     <div class="super-card">
@@ -569,6 +841,39 @@ function renderSuperset(block){
       ${block.note?`<div class="note">${esc(block.note)}</div>`:''}
     </div>`;
 }
+function parseVersionDate(versionId){
+  const s=String(versionId||'').trim();
+  if(!s) return null;
+
+  // Formatos contemplados: YYYYMMDD_HHMMSS, YYYYMMDDHHMMSS,
+  // o cualquier version_id que comience con YYYYMMDD.
+  const m=s.match(/(\d{4})(\d{2})(\d{2})(?:[_-]?(\d{2})(\d{2})(\d{2}))?/);
+  if(!m) return null;
+
+  const y=Number(m[1]), mo=Number(m[2]), d=Number(m[3]);
+  const hh=Number(m[4]||0), mm=Number(m[5]||0), ss=Number(m[6]||0);
+  const dt=new Date(y,mo-1,d,hh,mm,ss);
+  if(Number.isNaN(dt.getTime())) return null;
+  return dt;
+}
+
+function formatDateAR(dt){
+  return new Intl.DateTimeFormat('es-AR',{
+    day:'2-digit',
+    month:'2-digit',
+    year:'numeric'
+  }).format(dt);
+}
+
+function mostRecentRoutineDate(rows){
+  let latest=null;
+  rows.forEach(r=>{
+    const dt=parseVersionDate(r.version_id);
+    if(dt && (!latest || dt>latest)) latest=dt;
+  });
+  return latest;
+}
+
 function renderRoutine(rows,labels){
   const byDay=new Map();
   rows.forEach(r=>{
@@ -576,9 +881,13 @@ function renderRoutine(rows,labels){
     if(!byDay.has(d)) byDay.set(d,[]);
     byDay.get(d).push(r);
   });
-  const days=DAY_ORDER.filter(d=>byDay.has(d));
+  const days=DAY_ORDER.filter(d=>byDay.has(d)).sort((a,b)=>compareDayIds(a,b,labels));
   document.getElementById('summary').textContent=
     days.length+' día'+(days.length===1?'':'s')+'/semana';
+
+  const latestUpdate=mostRecentRoutineDate(rows);
+  const updatedDateEl=document.getElementById('updatedDate');
+  updatedDateEl.textContent=latestUpdate ? 'Actualizada: '+formatDateAR(latestUpdate) : '';
 
   const root=document.getElementById('routine');
   root.innerHTML=days.map(day=>{
@@ -601,7 +910,6 @@ function renderRoutine(rows,labels){
 }
 
 async function loadRoutineRowsFast(){
-  // Fuente principal: Apps Script leyendo directamente DB02.
   try{
     const sep=ROUTINES_API.includes('?')?'&':'?';
     const res=await fetch(ROUTINES_API+sep+'t='+Date.now(),{cache:'no-store'});
@@ -610,8 +918,6 @@ async function loadRoutineRowsFast(){
     if(!data || data.ok!==true || !Array.isArray(data.rows)){
       throw new Error(data && data.error ? data.error : 'Respuesta inválida de la API');
     }
-
-    // Normalizamos claves por seguridad para que coincidan con el resto de la app.
     return data.rows.map(row=>{
       const out={};
       Object.entries(row||{}).forEach(([k,v])=>out[normalizeHeader(k)]=String(v??'').trim());
@@ -619,14 +925,154 @@ async function loadRoutineRowsFast(){
     });
   }catch(e){
     console.warn('API directa no disponible; usando CSV publicado como respaldo.',e);
-
-    // Respaldo: la fuente anterior sigue disponible.
     const bust='&t='+Date.now();
     const res=await fetch(ROUTINES_CSV+bust,{cache:'no-store'});
     if(!res.ok) throw new Error('No se pudo cargar la rutina.');
     return parseCSV(await res.text());
   }
 }
+
+
+async function loadStudentNameOptional(token){
+  try{
+    const bust='&t='+Date.now();
+    const results=await Promise.allSettled([
+      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
+      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'})
+    ]);
+
+    const all=[];
+    for(const r of results){
+      if(r.status!=='fulfilled') continue;
+      try{
+        const txt=await r.value.text();
+        all.push(...parseCSV(txt));
+      }catch(e){}
+    }
+
+    const student=[...all].reverse().find(s=>String(s.token||'').trim()===token);
+    if(student && String(student.nombre||'').trim()){
+      document.getElementById('studentName').textContent=String(student.nombre).trim();
+    }
+  }catch(e){
+    console.warn('No se pudo cargar el nombre de la alumna; la rutina seguirá funcionando.',e);
+  }
+}
+
+function safePdfFilename(v){
+  const cleaned=String(v||'Rutina')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+  return (cleaned || 'Rutina').slice(0,80);
+}
+
+async function downloadRoutineAsSinglePagePdf(){
+  const btn=document.getElementById('downloadPdfBtn');
+  const original=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='Generando PDF…';
+
+  let exportRoot=null;
+  try{
+    if(typeof html2canvas!=='function' || !window.jspdf?.jsPDF){
+      throw new Error('No se pudieron cargar las herramientas de PDF.');
+    }
+
+    // Clonamos la vista para generar siempre un PDF de ancho estable,
+    // incluso cuando el alumno lo descarga desde el celular.
+    exportRoot=document.createElement('div');
+    exportRoot.className='pdf-export-root';
+
+    const header=document.querySelector('.header')?.cloneNode(true);
+    const wrap=document.querySelector('.wrap')?.cloneNode(true);
+    if(!header || !wrap) throw new Error('No se encontró el contenido de la rutina.');
+
+    // El botón de descarga no debe formar parte del PDF.
+    wrap.querySelector('.pdf-actions')?.remove();
+
+    exportRoot.appendChild(header);
+    exportRoot.appendChild(wrap);
+    document.body.appendChild(exportRoot);
+
+    // Esperamos un frame para que el clon tome tamaños y estilos definitivos.
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+
+    const canvas=await html2canvas(exportRoot,{
+      scale:2,
+      useCORS:true,
+      backgroundColor:'#F7F8FA',
+      logging:false,
+      width:exportRoot.scrollWidth,
+      height:exportRoot.scrollHeight,
+      windowWidth:exportRoot.scrollWidth,
+      windowHeight:exportRoot.scrollHeight,
+      scrollX:0,
+      scrollY:0
+    });
+
+    const {jsPDF}=window.jspdf;
+
+    // jsPDF/PDF tiene un límite práctico de tamaño. Si la rutina fuese
+    // extraordinariamente larga, reducimos proporcionalmente manteniendo
+    // TODO el contenido dentro de una única página.
+    const MAX_PT=14000;
+    const pxToPt=72/96;
+    let pageW=canvas.width/2*pxToPt;
+    let pageH=canvas.height/2*pxToPt;
+    const shrink=Math.min(1,MAX_PT/pageW,MAX_PT/pageH);
+    pageW*=shrink;
+    pageH*=shrink;
+
+    const pdf=new jsPDF({
+      orientation:pageW>pageH?'landscape':'portrait',
+      unit:'pt',
+      format:[pageW,pageH],
+      compress:true
+    });
+
+    const img=canvas.toDataURL('image/jpeg',0.94);
+    pdf.addImage(img,'JPEG',0,0,pageW,pageH,undefined,'FAST');
+
+    // html2canvas rasteriza los enlaces; recreamos encima áreas clickeables
+    // exactamente donde aparecen los botones "Ver video".
+    const rootRect=exportRoot.getBoundingClientRect();
+    const scaleX=pageW/rootRect.width;
+    const scaleY=pageH/rootRect.height;
+
+    exportRoot.querySelectorAll('a.video[href]').forEach(link=>{
+      const href=String(link.getAttribute('href')||'').trim();
+      if(!href) return;
+
+      const r=link.getBoundingClientRect();
+      const x=(r.left-rootRect.left)*scaleX;
+      const y=(r.top-rootRect.top)*scaleY;
+      const w=r.width*scaleX;
+      const h=r.height*scaleY;
+
+      if(w>0 && h>0){
+        pdf.link(x,y,w,h,{url:href});
+      }
+    });
+
+    const student=String(document.getElementById('studentName')?.textContent||'').trim();
+    const filename=safePdfFilename(student && student!=='Tu entrenamiento'
+      ? 'Rutina - '+student
+      : 'Rutina');
+
+    pdf.save(filename+'.pdf');
+  }catch(e){
+    console.error(e);
+    alert('No se pudo generar el PDF. Probá nuevamente en unos segundos.');
+  }finally{
+    exportRoot?.remove();
+    btn.disabled=false;
+    btn.textContent=original;
+  }
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click',downloadRoutineAsSinglePagePdf);
 
 (async()=>{
   const loading=document.getElementById('loading');
@@ -635,17 +1081,13 @@ async function loadRoutineRowsFast(){
     if(!token) throw new Error('Falta el token de la rutina.');
 
     const bust='&t='+Date.now();
-    const [allRoutineRows,libRes,namesRes,studentsRes,newStudentsRes]=await Promise.all([
+    const [allRoutineRows,libRes,namesRes]=await Promise.all([
       loadRoutineRowsFast(),
       fetch(EXERCISES_CSV+bust,{cache:'no-store'}),
-      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'}),
-      fetch(STUDENTS_CSV+bust,{cache:'no-store'}),
-      fetch(NEW_STUDENTS_CSV+bust,{cache:'no-store'})
+      fetch(DAY_NAMES_CSV+bust,{cache:'no-store'})
     ]);
     const libText=await libRes.text();
     const namesText=await namesRes.text();
-    const studentsText=await studentsRes.text();
-    const newStudentsText=await newStudentsRes.text();
 
     const routineRows=allRoutineRows
       .filter(r=>String(r.token||'').trim()===token && r.dia && r.ejercicio);
@@ -653,17 +1095,9 @@ async function loadRoutineRowsFast(){
 
     const rows=enrich(routineRows,parseCSV(libText));
     const labels=buildDayLabels(parseCSV(namesText),token);
-
-    const baseStudents=parseCSV(studentsText);
-    const createdStudents=parseCSV(newStudentsText);
-    const allStudents=[...baseStudents,...createdStudents];
-    const student=[...allStudents].reverse().find(s=>String(s.token||'').trim()===token);
-    if(student && String(student.nombre||'').trim()){
-      document.getElementById('studentName').textContent=String(student.nombre).trim();
-    }
-
     loading.style.display='none';
     renderRoutine(rows,labels);
+    loadStudentNameOptional(token);
   }catch(e){
     loading.className='error';
     loading.textContent='No se pudo cargar la rutina: '+e.message;
