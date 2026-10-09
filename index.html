@@ -78,7 +78,7 @@ button.primary{border:0;background:var(--ink);color:#fff;border-radius:9px;paddi
 .combo-grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .combo-card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:10px;min-width:0}
 .combo-card.vertical{padding:12px}
-.combo-name{font-size:16px;font-weight:800;line-height:1.15;min-height:0;word-break:break-word}
+.combo-name{font-size:16px;font-weight:800;line-height:1.15;word-break:break-word}
 .combo-card.vertical .combo-name{font-size:18px;min-height:0}
 .combo-card.vertical .combo-topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .combo-card.vertical .combo-name{flex:1}
@@ -86,8 +86,8 @@ button.primary{border:0;background:var(--ink);color:#fff;border-radius:9px;paddi
 .combo-card.vertical .combo-meta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
 .combo-card.vertical .combo-prescription,
 .combo-card.vertical .combo-last{margin-top:0}
-.combo-video{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:800;background:#fff}
-.combo-video-slot{display:flex;align-items:flex-start;margin-top:8px}
+.combo-video{display:inline-flex;align-items:center;justify-content:center;margin-top:5px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:800;background:#fff}
+.combo-video-slot{min-height:32px;display:flex;align-items:flex-start}
 .combo-prescription{margin-top:9px;padding:8px;border-radius:8px;background:#f7f8f9;border:1px solid var(--line);font-size:12px;line-height:1.35}
 .combo-prescription b{font-size:13px}
 .combo-last{margin-top:9px;padding:8px;border-left:3px solid var(--gold);border-radius:7px;background:#f7f8f9}
@@ -111,7 +111,7 @@ button.primary{border:0;background:var(--ink);color:#fff;border-radius:9px;paddi
 @media (max-width:420px){
   .combo-grid.cols-3{gap:6px}
   .combo-grid.cols-3 .combo-card{padding:8px 6px}
-  .combo-grid.cols-3 .combo-name{font-size:14px;min-height:0}
+  .combo-grid.cols-3 .combo-name{font-size:14px}
   .combo-grid.cols-3 .combo-video{font-size:11px;padding:7px 6px;width:100%}
   .combo-grid.cols-3 .combo-prescription{font-size:11px;padding:6px}
   .combo-grid.cols-3 .combo-prescription b{font-size:12px}
@@ -765,20 +765,18 @@ function makeComboCard(r,exIndex,rounds,vertical){
     name.textContent=r.ejercicio||'Ejercicio';
     card.appendChild(name);
 
+    const videoSlot=document.createElement('div');
+    videoSlot.className='combo-video-slot';
     if(video){
-      const videoSlot=document.createElement('div');
-      videoSlot.className='combo-video-slot';
-
       const a=document.createElement('a');
       a.className='combo-video';
       a.href=video;
       a.target='_blank';
       a.rel='noopener noreferrer';
       a.textContent='▶ Ver video';
-
       videoSlot.appendChild(a);
-      card.appendChild(videoSlot);
     }
+    card.appendChild(videoSlot);
 
     const pres=document.createElement('div');
     pres.className='combo-prescription';
@@ -827,19 +825,22 @@ function makeComboCard(r,exIndex,rounds,vertical){
   return card;
 }
 
-function syncCombinedCardNameHeights(grid){
-  if(!grid) return;
-
-  const names=[...grid.querySelectorAll('.combo-name')];
+function alignComboColumnTitles(grid){
+  const names=[...grid.querySelectorAll('.combo-card:not(.vertical) .combo-name')];
   if(!names.length) return;
 
+  // Medir primero las alturas naturales de los nombres.
   names.forEach(el=>el.style.minHeight='0px');
 
-  // Medimos después del render para que cada nombre tome sus líneas reales.
-  const maxHeight=Math.max(...names.map(el=>el.getBoundingClientRect().height));
+  requestAnimationFrame(()=>{
+    let max=0;
+    names.forEach(el=>{
+      max=Math.max(max,Math.ceil(el.getBoundingClientRect().height));
+    });
 
-  names.forEach(el=>{
-    el.style.minHeight=Math.ceil(maxHeight)+'px';
+    names.forEach(el=>{
+      el.style.minHeight=max+'px';
+    });
   });
 }
 
@@ -869,7 +870,7 @@ function renderCombined(item){
     item.rows.forEach((r,i)=>grid.appendChild(makeComboCard(r,i,rounds,false)));
     host.appendChild(grid);
 
-    requestAnimationFrame(()=>syncCombinedCardNameHeights(grid));
+    alignComboColumnTitles(grid);
 
     if(note){
       const bottomNote=document.createElement('div');
@@ -931,6 +932,7 @@ async function postRecord(r,saved){
     action:'save',
     token:r.token||'',
     dia:r.dia||'',
+    dia_visible:dayTitle(r.dia),
     ejercicio:r.ejercicio||'',
     s1:saved.weights?.[0]||'',
     s2:saved.weights?.[1]||'',
@@ -970,10 +972,6 @@ async function sendCurrent(){
   return sent;
 }
 
-window.addEventListener('resize',()=>{
-  document.querySelectorAll('.combo-grid.cols-2, .combo-grid.cols-3')
-    .forEach(grid=>syncCombinedCardNameHeights(grid));
-});
 
 document.getElementById('keysToggle').addEventListener('click',()=>{
   const content=document.getElementById('keysContent');
