@@ -751,134 +751,135 @@ function volcarDatos(d){
   setTimeout(()=>{suppressEvents=false;},0);
 }
 
-const CLOUD_API='https://script.google.com/macros/s/AKfycbzQXFglB7iOoEIV6N8CYQhm6TPe8p3x6cN6fifz-zhrSLf4fpt1Lcecbgpj81T1J2Wp7A/exec';
-const CACHE_KEY='rp_dietas_google_cache_v2';
+
+const DIETAS_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vTc5giXjRtcO8hl1VEj3oiTD9wess5beuyicHkVT7dxHnxLfkRJ2mxTRSu2nhQZTvXvnjNxDMdxGtt6/pub?gid=922462389&single=true&output=csv';
+const DIETAS_FORM='https://docs.google.com/forms/d/e/1FAIpQLSfrP9AzpotFyfrULV8lrrZz1VcOWQmZr1lfr3d1XJ-UiAWUYw/formResponse';
+const CACHE_KEY='rp_dietas_google_cache_v3';
+
 let dietasDisponibles=[];
+let todasLasDietas=[];
 let currentPlanId=null;
 let currentMode='new'; // new | open | replace
 let suppressEvents=false;
 let lastTitleValue='';
-function jsonpGoogle(params={}){
-  return new Promise((resolve,reject)=>{
-    const callback='rp_jsonp_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const script=document.createElement('script');
-    const timer=setTimeout(()=>{ cleanup(); reject(new Error('Google no respondió a tiempo.')); },15000);
 
-    function cleanup(){
-      clearTimeout(timer);
-      try{delete window[callback]}catch(e){}
-      if(script.parentNode)script.parentNode.removeChild(script);
+function normalizarTexto(v){
+  return String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+}
+function generarId(){return 'plan_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)}
+function leerCache(){try{return JSON.parse(localStorage.getItem(CACHE_KEY)||'[]')}catch(e){return []}}
+function escribirCache(lista){localStorage.setItem(CACHE_KEY,JSON.stringify(lista||[]))}
+function ahoraISO(){return new Date().toISOString()}
+
+function parseCSV(text){
+  const rows=[];
+  let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch==='"'){
+      if(q && text[i+1]==='"'){cur+='"';i++;}
+      else q=!q;
+    }else if(ch===',' && !q){
+      row.push(cur); cur='';
+    }else if((ch==='\n' || ch==='\r') && !q){
+      if(ch==='\r' && text[i+1]==='\n')i++;
+      row.push(cur); cur='';
+      if(row.some(v=>String(v).trim()!==''))rows.push(row);
+      row=[];
+    }else{
+      cur+=ch;
     }
-
-    window[callback]=(data)=>{
-      cleanup();
-      if(data && data.ok) resolve(data);
-      else reject(new Error((data&&data.error)||'Error de Google'));
-    };
-
-    script.onerror=()=>{
-      cleanup();
-      reject(new Error('No se pudo cargar la respuesta de Google.'));
-    };
-
-    const qs=new URLSearchParams({...params,callback,_:Date.now()});
-    script.src=CLOUD_API+'?'+qs.toString();
-    document.head.appendChild(script);
+  }
+  if(cur!=='' || row.length){row.push(cur); if(row.some(v=>String(v).trim()!==''))rows.push(row);}
+  if(!rows.length)return [];
+  const headers=rows[0].map(h=>String(h||'').trim().toUpperCase());
+  return rows.slice(1).map(r=>{
+    const o={};
+    headers.forEach((h,i)=>o[h]=r[i]??'');
+    return o;
   });
 }
 
-function enviarPostGoogle(params={}){
-  return new Promise((resolve,reject)=>{
-    const iframeName='rp_post_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const iframe=document.createElement('iframe');
-    iframe.name=iframeName;
-    iframe.style.display='none';
-    document.body.appendChild(iframe);
+function filaADieta(r){
+  let datos={};
+  try{datos=JSON.parse(r.DATOS||'{}')}catch(e){datos={}}
+  return {
+    id:String(r.ID_PLAN||'').trim(),
+    alumno:String(r.ALUMNO||datos.alumno||'').trim(),
+    titulo:String(r.TITULO||datos.titulo||'').trim(),
+    fecha:String(r.FECHA||datos.fecha||'').trim(),
+    actualizado:String(r.ACTUALIZADO||'').trim(),
+    datos
+  };
+}
 
-    const form=document.createElement('form');
-    form.method='POST';
-    form.action=CLOUD_API;
-    form.target=iframeName;
-    form.style.display='none';
+async function leerDietasGoogle(){
+  const url=DIETAS_CSV+(DIETAS_CSV.includes('?')?'&':'?')+'t='+Date.now();
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw new Error('No se pudo leer Google Sheets.');
+  const text=await res.text();
+  return parseCSV(text).map(filaADieta).filter(x=>x.id || x.alumno);
+}
 
-    Object.entries(params).forEach(([k,v])=>{
-      const input=document.createElement('input');
-      input.type='hidden';
-      input.name=k;
-      input.value=v==null?'':String(v);
-      form.appendChild(input);
-    });
+async function enviarDietaGoogle(item){
+  const d=item.datos||{};
+  const body=new URLSearchParams();
+  body.append('entry.198114864',item.id||'');
+  body.append('entry.1805276467',d.alumno||'');
+  body.append('entry.1608197857',d.titulo||'');
+  body.append('entry.350593050',d.fecha||'');
+  body.append('entry.935375283',item.actualizado||ahoraISO());
+  body.append('entry.1770538461',JSON.stringify(d));
 
-    document.body.appendChild(form);
-
-    let settled=false;
-    const finish=(ok,err)=>{
-      if(settled)return;
-      settled=true;
-      form.remove();
-      setTimeout(()=>iframe.remove(),250);
-      ok ? resolve(true) : reject(err||new Error('No se pudo enviar a Google.'));
-    };
-
-    iframe.onload=()=>setTimeout(()=>finish(true),350);
-
-    setTimeout(()=>finish(true),4500);
-
-    try{ form.submit(); }
-    catch(err){ finish(false,err); }
+  await fetch(DIETAS_FORM,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:body.toString()
   });
 }
 
-async function esperarSincronizacionGoogle(predicado,intentos=10,espera=700){
+async function esperarQueAparezca(id,actualizado,intentos=12,espera=900){
   for(let i=0;i<intentos;i++){
     try{
-      const r=await jsonpGoogle({action:'list'});
-      const lista=r.dietas||[];
-      if(predicado(lista))return lista;
+      const lista=await leerDietasGoogle();
+      const encontrado=lista.find(x=>String(x.id)===String(id) && String(x.actualizado)===String(actualizado));
+      if(encontrado)return lista;
     }catch(e){}
-    await new Promise(res=>setTimeout(res,espera));
+    await new Promise(r=>setTimeout(r,espera));
   }
-  throw new Error('No pude verificar el cambio en Google.');
+  return null;
 }
 
 function deduplicarPorAlumna(lista){
   const map=new Map();
   (lista||[]).forEach(x=>{
-    const d=x.datos||{};
-    const nombre=d.alumno||x.alumno||'';
+    const nombre=x.datos?.alumno||x.alumno||'';
     const key=normalizarTexto(nombre);
     if(!key)return;
     const prev=map.get(key);
-    const t=x.actualizado||'';
-    if(!prev || t>(prev.actualizado||'')) map.set(key,x);
+    const t=String(x.actualizado||'');
+    if(!prev || t>String(prev.actualizado||'')) map.set(key,x);
   });
-  return [...map.values()].sort((a,b)=>{
-    const na=(a.datos?.alumno||a.alumno||'').localeCompare(b.datos?.alumno||b.alumno||'','es',{sensitivity:'base'});
-    return na;
-  });
+  return [...map.values()].sort((a,b)=>
+    String(a.datos?.alumno||a.alumno||'').localeCompare(
+      String(b.datos?.alumno||b.alumno||''),'es',{sensitivity:'base'}
+    )
+  );
 }
 
 async function sincronizarDesdeGoogle(){
   cloudEstado('☁️ Sincronizando con Google…');
   try{
-    const r=await jsonpGoogle({action:'list'});
-    const remotas=(r.dietas||[]).map(x=>({
-      id:String(x.id||''),
-      datos:x.datos||{},
-      actualizado:x.actualizado||'',
-      creado:x.actualizado||''
-    }));
-    if(remotas.length){
-      dietasDisponibles=deduplicarPorAlumna(remotas);
-      escribirCache(dietasDisponibles);
-    }else{
-      dietasDisponibles=deduplicarPorAlumna(leerCache());
-    }
+    todasLasDietas=await leerDietasGoogle();
+    dietasDisponibles=deduplicarPorAlumna(todasLasDietas);
+    escribirCache(dietasDisponibles);
     refrescarSelectores();
     cloudEstado('☁️ Sincronizado con Google · '+dietasDisponibles.length+' alumna(s)');
   }catch(err){
     console.error(err);
     dietasDisponibles=deduplicarPorAlumna(leerCache());
+    todasLasDietas=[...dietasDisponibles];
     refrescarSelectores();
     cloudEstado('⚠️ Sin conexión con Google · usando copia local');
   }
@@ -895,7 +896,7 @@ function refrescarSelectores(){
 
   document.getElementById('alumnasSugeridas').innerHTML=alumnas.map(n=>`<option value="${attr(n)}"></option>`).join('');
 
-  const titulos=[...new Set(dietasDisponibles.map(x=>x.datos?.titulo||'').filter(Boolean))]
+  const titulos=[...new Set((todasLasDietas||[]).map(x=>x.datos?.titulo||x.titulo||'').filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'}));
   document.getElementById('titulosSugeridos').innerHTML=titulos.map(t=>`<option value="${attr(t)}"></option>`).join('');
 }
@@ -941,9 +942,9 @@ function manejarAlumnoEscrito(){
 
 function buscarPlantillaPorTitulo(titulo){
   const key=normalizarTexto(titulo);
-  return dietasDisponibles
-    .filter(x=>normalizarTexto(x.datos?.titulo||'')===key)
-    .sort((a,b)=>(b.actualizado||'').localeCompare(a.actualizado||''))[0]||null;
+  return (todasLasDietas||[])
+    .filter(x=>normalizarTexto(x.datos?.titulo||x.titulo||'')===key)
+    .sort((a,b)=>String(b.actualizado||'').localeCompare(String(a.actualizado||'')))[0]||null;
 }
 
 function comidasTienenContenido(){
@@ -986,19 +987,20 @@ async function guardarDieta(){
   const existente=buscarAlumna(d.alumno);
   let mensaje='¿Confirmás guardar esta dieta?';
   if(existente){
-    mensaje='¿Confirmás guardar esta dieta?\n\nAl continuar, la dieta anterior de '+(existente.datos?.alumno||d.alumno)+' será reemplazada por la nueva versión.';
+    mensaje='¿Confirmás guardar esta dieta?\n\nLa dieta anterior de '+(existente.datos?.alumno||d.alumno)+' será reemplazada por esta nueva versión dentro del constructor.';
   }
   if(!confirm(mensaje))return;
 
   const id=existente?.id || currentPlanId || generarId();
-  const ahora=ahoraISO();
-  const localItem={id,datos:d,actualizado:ahora,creado:existente?.creado||ahora};
+  const actualizado=ahoraISO();
+  const item={id,alumno:d.alumno,titulo:d.titulo,fecha:d.fecha,datos:d,actualizado,creado:existente?.creado||actualizado};
 
-  // Mantener una sola dieta por alumna también en la copia local.
+  // Actualización optimista local.
   dietasDisponibles=deduplicarPorAlumna([
-    ...dietasDisponibles.filter(x=>normalizarTexto(x.datos?.alumno||'')!==normalizarTexto(d.alumno)),
-    localItem
+    ...dietasDisponibles.filter(x=>normalizarTexto(x.datos?.alumno||x.alumno||'')!==normalizarTexto(d.alumno)),
+    item
   ]);
+  todasLasDietas=[...(todasLasDietas||[]),item];
   escribirCache(dietasDisponibles);
   refrescarSelectores();
   currentPlanId=id;
@@ -1007,23 +1009,25 @@ async function guardarDieta(){
 
   cloudEstado('☁️ Guardando en Google…');
   estado('Guardando dieta…');
+
   try{
-    await enviarPostGoogle({
-      action:'save',id,alumno:d.alumno,titulo:d.titulo,fecha:d.fecha,datos:JSON.stringify(d)
-    });
-
-    await esperarSincronizacionGoogle(lista=>
-      lista.some(x=>String(x.id||'')===String(id) && normalizarTexto(x.alumno||x.datos?.alumno||'')===normalizarTexto(d.alumno))
-    );
-
-    currentPlanId=id;
-    estado('✅ Dieta guardada.');
-    cloudEstado('☁️ Guardado en Google');
-    await sincronizarDesdeGoogle();
+    await enviarDietaGoogle(item);
+    const lista=await esperarQueAparezca(id,actualizado);
+    if(lista){
+      todasLasDietas=lista;
+      dietasDisponibles=deduplicarPorAlumna(lista);
+      escribirCache(dietasDisponibles);
+      refrescarSelectores();
+      cloudEstado('☁️ Guardado y sincronizado con Google');
+      estado('✅ Dieta guardada.');
+    }else{
+      cloudEstado('☁️ Enviada a Google · esperando actualización del listado');
+      estado('✅ Dieta enviada a Google. Puede tardar unos segundos en aparecer en otro dispositivo.');
+    }
   }catch(err){
     console.error(err);
-    estado('⚠️ La dieta quedó guardada localmente, pero Google no confirmó el guardado.');
-    cloudEstado('⚠️ Pendiente de sincronizar con Google');
+    cloudEstado('⚠️ No se pudo confirmar Google · quedó copia local');
+    estado('⚠️ La dieta quedó guardada localmente, pero no pude confirmar el envío a Google.');
   }
 }
 
