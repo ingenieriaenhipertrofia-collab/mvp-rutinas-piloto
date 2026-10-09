@@ -314,7 +314,7 @@ button.secondary,.same{
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1Beg305Pe0JKkMFCj-cKmyKxICGc4HnCUMy7aJQisCj2l0QgQG29ax30eBe7_eH8glAA6xjpweyGV/pub?gid=1251455005&single=true&output=csv';
 const EXERCISES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=41200741&single=true&output=csv';
-const PILOT_RECORDS_API_URL = 'https://script.google.com/macros/s/AKfycbwCkMBkHH9BkIm5UQgQS5l_PLbCN4040ZMoNtIxOTL9lGKTweT4c3iWAH47foSo3zEa/exec';
+const HISTORY_API_URL = 'https://script.google.com/macros/s/AKfycbxx-g3vuVobCwAC2Tf-rP8soE2XMi7lzhUfpqcYJUyOEUujqBFt6hX9H6-L_CAxuZKP/exec';
 const DAY_NAMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS11sMy65gbqqSlGGatOa1lS2TUbETHQmQ3Qju0OMT8dmo3pXwO5PRTpzjJ13AIV1g1vHRChaSxlkHP/pub?gid=1912648114&single=true&output=csv';
 let allRows = [];
 let rows = [];
@@ -924,30 +924,28 @@ function hasMeaningfulData(saved){
 async function postRecord(r,saved){
   if(!hasMeaningfulData(saved)) return false;
 
-  if(!PILOT_RECORDS_API_URL || PILOT_RECORDS_API_URL.startsWith('__')){
-    throw new Error('Falta configurar la URL del Web App de registros del piloto.');
-  }
-
   const body=new URLSearchParams({
-    action:'save',
-    token:r.token||'',
-    dia:r.dia||'',
-    dia_visible:dayTitle(r.dia),
-    ejercicio:r.ejercicio||'',
-    s1:saved.weights?.[0]||'',
-    s2:saved.weights?.[1]||'',
-    s3:saved.weights?.[2]||'',
-    s4:saved.weights?.[3]||'',
-    s5:saved.weights?.[4]||'',
-    comentario:saved.comentario||''
+    'entry.293607866':r.token||'',
+    'entry.603257664':dayTitle(r.dia),
+    'entry.637618348':r.dia||'',
+    'entry.1070337401':r.ejercicio||'',
+    'entry.1171632533':saved.comentario||'',
+    'entry.787420978':saved.weights?.[0]||'',
+    'entry.99988947':saved.weights?.[1]||'',
+    'entry.1031042020':saved.weights?.[2]||'',
+    'entry.2078932270':saved.weights?.[3]||'',
+    'entry.819204979':saved.weights?.[4]||''
   });
 
-  await fetch(PILOT_RECORDS_API_URL,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body:body.toString()
-  });
+  await fetch(
+    'https://docs.google.com/forms/d/e/1FAIpQLScrYmeqEuiYd7rKQ6BqZUKreJUZZqq0LuSTk5w0kZpp4RODKA/formResponse',
+    {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:body.toString()
+    }
+  );
 
   return true;
 }
@@ -1028,25 +1026,20 @@ document.getElementById('doneDaysBtn').addEventListener('click',()=>{
 
 
 async function loadLastRowsForToken(token){
-  if(!PILOT_RECORDS_API_URL || PILOT_RECORDS_API_URL.startsWith('__')){
-    console.warn('Backend de registros piloto todavía no configurado.');
-    return [];
-  }
-
   const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),3500);
+  const timeout=setTimeout(()=>controller.abort(),2500);
 
   try{
-    const sep=PILOT_RECORDS_API_URL.includes('?')?'&':'?';
+    const sep=HISTORY_API_URL.includes('?')?'&':'?';
     const res=await fetch(
-      PILOT_RECORDS_API_URL+sep+'action=history&token='+encodeURIComponent(token)+'&t='+Date.now(),
+      HISTORY_API_URL+sep+'token='+encodeURIComponent(token)+'&t='+Date.now(),
       {cache:'no-store',signal:controller.signal}
     );
     clearTimeout(timeout);
 
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json();
 
+    const data=await res.json();
     if(!data || data.ok!==true || !Array.isArray(data.rows)){
       throw new Error(data && data.error ? data.error : 'Respuesta inválida');
     }
@@ -1060,7 +1053,7 @@ async function loadLastRowsForToken(token){
     });
   }catch(e){
     clearTimeout(timeout);
-    console.warn('No se pudo cargar el historial exclusivo del piloto.',e);
+    console.warn('No se pudo cargar el historial de pesos.',e);
     return [];
   }
 }
