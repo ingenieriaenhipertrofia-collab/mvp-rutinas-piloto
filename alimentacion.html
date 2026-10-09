@@ -758,58 +758,87 @@ let currentPlanId=null;
 let currentMode='new'; // new | open | replace
 let suppressEvents=false;
 let lastTitleValue='';
-const pendingRequests=new Map();
-
-function normalizarTexto(v){
-  return String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
-}
-function generarId(){return 'plan_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)}
-function leerCache(){try{return JSON.parse(localStorage.getItem(CACHE_KEY)||'[]')}catch(e){return []}}
-function escribirCache(lista){localStorage.setItem(CACHE_KEY,JSON.stringify(lista||[]))}
-function ahoraISO(){return new Date().toISOString()}
-
-window.addEventListener('message',ev=>{
-  const d=ev.data;
-  if(!d || d.app!=='RP_ALIMENTACION' || !d.requestId)return;
-  const p=pendingRequests.get(d.requestId);
-  if(!p)return;
-  pendingRequests.delete(d.requestId);
-  clearTimeout(p.timer);
-  if(d.ok)p.resolve(d);else p.reject(new Error(d.error||'Error de Google'));
-});
-
-function llamarGoogle(method,params={}){
+function jsonpGoogle(params={}){
   return new Promise((resolve,reject)=>{
-    const requestId='req_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const iframeName='rp_iframe_'+requestId;
+    const callback='rp_jsonp_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const timer=setTimeout(()=>{ cleanup(); reject(new Error('Google no respondió a tiempo.')); },15000);
+
+    function cleanup(){
+      clearTimeout(timer);
+      try{delete window[callback]}catch(e){}
+      if(script.parentNode)script.parentNode.removeChild(script);
+    }
+
+    window[callback]=(data)=>{
+      cleanup();
+      if(data && data.ok) resolve(data);
+      else reject(new Error((data&&data.error)||'Error de Google'));
+    };
+
+    script.onerror=()=>{
+      cleanup();
+      reject(new Error('No se pudo cargar la respuesta de Google.'));
+    };
+
+    const qs=new URLSearchParams({...params,callback,_:Date.now()});
+    script.src=CLOUD_API+'?'+qs.toString();
+    document.head.appendChild(script);
+  });
+}
+
+function enviarPostGoogle(params={}){
+  return new Promise((resolve,reject)=>{
+    const iframeName='rp_post_'+Date.now()+'_'+Math.random().toString(36).slice(2);
     const iframe=document.createElement('iframe');
     iframe.name=iframeName;
     iframe.style.display='none';
     document.body.appendChild(iframe);
 
     const form=document.createElement('form');
-    form.method=method;
+    form.method='POST';
     form.action=CLOUD_API;
     form.target=iframeName;
     form.style.display='none';
 
-    const all={...params,requestId};
-    Object.entries(all).forEach(([k,v])=>{
+    Object.entries(params).forEach(([k,v])=>{
       const input=document.createElement('input');
-      input.type='hidden';input.name=k;input.value=v==null?'':String(v);
+      input.type='hidden';
+      input.name=k;
+      input.value=v==null?'':String(v);
       form.appendChild(input);
     });
+
     document.body.appendChild(form);
 
-    const timer=setTimeout(()=>{
-      pendingRequests.delete(requestId);
-      form.remove();setTimeout(()=>iframe.remove(),200);
-      reject(new Error('Google no respondió a tiempo.'));
-    },20000);
+    let settled=false;
+    const finish=(ok,err)=>{
+      if(settled)return;
+      settled=true;
+      form.remove();
+      setTimeout(()=>iframe.remove(),250);
+      ok ? resolve(true) : reject(err||new Error('No se pudo enviar a Google.'));
+    };
 
-    pendingRequests.set(requestId,{resolve:(x)=>{form.remove();setTimeout(()=>iframe.remove(),200);resolve(x)},reject:(e)=>{form.remove();setTimeout(()=>iframe.remove(),200);reject(e)},timer});
-    form.submit();
+    iframe.onload=()=>setTimeout(()=>finish(true),350);
+
+    setTimeout(()=>finish(true),4500);
+
+    try{ form.submit(); }
+    catch(err){ finish(false,err); }
   });
+}
+
+async function esperarSincronizacionGoogle(predicado,intentos=10,espera=700){
+  for(let i=0;i<intentos;i++){
+    try{
+      const r=await jsonpGoogle({action:'list'});
+      const lista=r.dietas||[];
+      if(predicado(lista))return lista;
+    }catch(e){}
+    await new Promise(res=>setTimeout(res,espera));
+  }
+  throw new Error('No pude verificar el cambio en Google.');
 }
 
 function deduplicarPorAlumna(lista){
@@ -832,7 +861,7 @@ function deduplicarPorAlumna(lista){
 async function sincronizarDesdeGoogle(){
   cloudEstado('☁️ Sincronizando con Google…');
   try{
-    const r=await llamarGoogle('GET',{action:'list'});
+    const r=await jsonpGoogle({action:'list'});
     const remotas=(r.dietas||[]).map(x=>({
       id:String(x.id||''),
       datos:x.datos||{},
@@ -979,10 +1008,15 @@ async function guardarDieta(){
   cloudEstado('☁️ Guardando en Google…');
   estado('Guardando dieta…');
   try{
-    const r=await llamarGoogle('POST',{
+    await enviarPostGoogle({
       action:'save',id,alumno:d.alumno,titulo:d.titulo,fecha:d.fecha,datos:JSON.stringify(d)
     });
-    currentPlanId=r.id||id;
+
+    await esperarSincronizacionGoogle(lista=>
+      lista.some(x=>String(x.id||'')===String(id) && normalizarTexto(x.alumno||x.datos?.alumno||'')===normalizarTexto(d.alumno))
+    );
+
+    currentPlanId=id;
     estado('✅ Dieta guardada.');
     cloudEstado('☁️ Guardado en Google');
     await sincronizarDesdeGoogle();
