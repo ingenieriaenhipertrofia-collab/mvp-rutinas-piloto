@@ -99,6 +99,26 @@ button.primary{border:0;background:var(--ink);color:#fff;border-radius:9px;paddi
 .combo-weight-row label{font-size:11px;font-weight:800;min-width:22px}
 .combo-weight{width:100%;min-width:0;padding:9px 7px;border:1px solid var(--line);border-radius:8px;font-size:16px}
 .combo-unit{font-size:11px;color:var(--muted);font-weight:700}
+.combo-same{
+  display:none;
+  border:1px solid var(--line);
+  background:#f2f4f5;
+  border-radius:7px;
+  padding:7px 8px;
+  cursor:pointer;
+  font-weight:800;
+  font-size:10px;
+  color:var(--ink);
+  white-space:nowrap;
+  flex:0 0 auto;
+}
+.combo-card.vertical .combo-same{
+  padding:5px 5px;
+  font-size:9px;
+  line-height:1;
+  border-radius:6px;
+}
+
 .combo-vertical-weightgrid{display:flex;gap:6px;margin-top:10px;flex-wrap:nowrap}
 .combo-vertical-weightgrid .combo-weight-row{margin-top:0;flex:1 1 0;min-width:0;gap:4px}
 .combo-vertical-weightgrid .combo-weight-row label{min-width:auto;font-size:10px}
@@ -315,6 +335,7 @@ button.secondary,.same{
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1Beg305Pe0JKkMFCj-cKmyKxICGc4HnCUMy7aJQisCj2l0QgQG29ax30eBe7_eH8glAA6xjpweyGV/pub?gid=1251455005&single=true&output=csv';
 const EXERCISES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=41200741&single=true&output=csv';
 const HISTORY_API_URL = 'https://script.google.com/macros/s/AKfycbxx-g3vuVobCwAC2Tf-rP8soE2XMi7lzhUfpqcYJUyOEUujqBFt6hX9H6-L_CAxuZKP/exec';
+const LAST_CSV_URL = 'https://docs.google.com/spreadsheets/d/1LN1hiXrc3jpTbHuzMA4MKXZEepZQ_iKPCTZHZrrqA-4/gviz/tq?tqx=out:csv&sheet=Estado_Alumno_Ejercicio_Piloto';
 const DAY_NAMES_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS11sMy65gbqqSlGGatOa1lS2TUbETHQmQ3Qju0OMT8dmo3pXwO5PRTpzjJ13AIV1g1vHRChaSxlkHP/pub?gid=1912648114&single=true&output=csv';
 let allRows = [];
 let rows = [];
@@ -818,6 +839,36 @@ function makeComboCard(r,exIndex,rounds,vertical){
     unit.textContent='kg';
 
     row.append(label,input,unit);
+
+    if(i>0){
+      const same=document.createElement('button');
+      same.type='button';
+      same.className='combo-same';
+      same.textContent='↺ mismo';
+
+      const previousInput=()=>weightBox.querySelector(`.combo-weight[data-ex-index="${exIndex}"][data-round="${i-1}"]`);
+      const sync=()=>{
+        const prev=previousInput();
+        same.style.display=(prev && String(prev.value||'').trim()!=='')?'inline-block':'none';
+      };
+
+      same.addEventListener('click',()=>{
+        const prev=previousInput();
+        if(!prev) return;
+        input.value=prev.value;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+      });
+
+      // Se actualiza en vivo según el peso de la vuelta anterior del MISMO ejercicio.
+      setTimeout(()=>{
+        const prev=previousInput();
+        if(prev) prev.addEventListener('input',sync);
+        sync();
+      },0);
+
+      row.appendChild(same);
+    }
+
     weightBox.appendChild(row);
   }
 
@@ -1053,8 +1104,16 @@ async function loadLastRowsForToken(token){
     });
   }catch(e){
     clearTimeout(timeout);
-    console.warn('No se pudo cargar el historial de pesos.',e);
-    return [];
+    console.warn('API de historial no disponible; intentando respaldo CSV.',e);
+
+    const sep=LAST_CSV_URL.includes('?')?'&':'?';
+    const res=await fetch(LAST_CSV_URL+sep+'t='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('No se pudo cargar el historial de pesos ni por API ni por CSV.');
+
+    const all=parseCsv(await res.text());
+
+    // La hoja incremental contiene todos los alumnos; el index conserva solo el token actual.
+    return all.filter(r=>String(r.token||'').trim()===String(token||'').trim());
   }
 }
 
