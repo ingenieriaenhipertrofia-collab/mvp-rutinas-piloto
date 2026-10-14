@@ -67,6 +67,155 @@ textarea{width:100%;min-height:120px;resize:vertical}
   .notes-grid,.upload-grid{grid-template-columns:1fr}
 }
 </style>
+
+<style id="measure-ui-cleanup">
+#measureEntry{display:none !important}
+#measureEntry.show{display:block !important}
+.measure-entry{
+  margin:12px 0 14px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fafafa;
+}
+.measure-entry-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.measure-entry label{
+  display:block;
+  margin-bottom:6px;
+  font-size:12px;
+  font-weight:800;
+}
+.measure-entry input{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px;
+  background:#fff;
+}
+.measure-actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.measure-status{
+  margin-top:8px;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted);
+}
+.measure-status.ok{color:#287a45}
+.measure-status.error{color:#b3261e}
+@media(max-width:720px){
+  .measure-entry-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+
+
+<style id="measure-layout-cleanup">
+#measureEntry{
+  display:none !important;
+}
+#measureEntry.show{
+  display:block !important;
+}
+
+#measureEntry .measure-date-row{
+  margin-bottom:14px;
+}
+
+#measureEntry .measure-field{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:6px;
+  min-width:0;
+}
+
+#measureEntry .measure-field-date{
+  width:min(260px,100%);
+}
+
+#measureEntry .measure-field label{
+  display:block;
+  margin:0;
+  padding:0;
+  font-size:13px;
+  line-height:1.2;
+  font-weight:800;
+  color:var(--ink);
+  text-align:left;
+}
+
+#measureEntry .measure-field input{
+  display:block;
+  width:100%;
+  min-width:0;
+  height:44px;
+  margin:0;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font:inherit;
+  color:var(--ink);
+}
+
+#measureEntry .measure-entry-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px 16px;
+  align-items:start;
+}
+
+#measureEntry .measure-actions{
+  margin-top:16px;
+}
+
+@media(max-width:720px){
+  #measureEntry{
+    padding:14px;
+  }
+
+  #measureEntry .measure-date-row{
+    margin-bottom:16px;
+  }
+
+  #measureEntry .measure-field-date{
+    width:min(240px,100%);
+  }
+
+  #measureEntry .measure-entry-grid{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  #measureEntry .measure-field label{
+    font-size:12px;
+  }
+
+  #measureEntry .measure-field input{
+    height:46px;
+  }
+
+  #measureEntry .measure-actions{
+    display:grid;
+    grid-template-columns:1fr 1.35fr;
+    gap:8px;
+  }
+
+  #measureEntry .measure-actions button{
+    width:100%;
+    min-width:0;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="header">
@@ -136,14 +285,36 @@ textarea{width:100%;min-height:120px;resize:vertical}
     </div>
 
     <div id="measureEntry" class="measure-entry">
-      <div class="measure-entry-grid">
-        <div><label for="measureDate">Fecha</label><input id="measureDate" type="date"></div>
-        <div><label for="mPeso">Peso (kg)</label><input id="mPeso" type="number" step="0.1" inputmode="decimal"></div>
-        <div><label for="mCintura">Cintura (cm)</label><input id="mCintura" type="number" step="0.1" inputmode="decimal"></div>
-        <div><label for="mCadera">Cadera (cm)</label><input id="mCadera" type="number" step="0.1" inputmode="decimal"></div>
-        <div><label for="mMuslo">Muslo (cm)</label><input id="mMuslo" type="number" step="0.1" inputmode="decimal"></div>
-        <div><label for="mBrazo">Brazo (cm)</label><input id="mBrazo" type="number" step="0.1" inputmode="decimal"></div>
+      <div class="measure-date-row">
+        <div class="measure-field measure-field-date">
+          <label for="measureDate">Fecha</label>
+          <input id="measureDate" type="date">
+        </div>
       </div>
+
+      <div class="measure-entry-grid">
+        <div class="measure-field">
+          <label for="mPeso">Peso (kg)</label>
+          <input id="mPeso" type="number" step="0.1" inputmode="decimal">
+        </div>
+        <div class="measure-field">
+          <label for="mCintura">Cintura (cm)</label>
+          <input id="mCintura" type="number" step="0.1" inputmode="decimal">
+        </div>
+        <div class="measure-field">
+          <label for="mCadera">Cadera (cm)</label>
+          <input id="mCadera" type="number" step="0.1" inputmode="decimal">
+        </div>
+        <div class="measure-field">
+          <label for="mMuslo">Muslo (cm)</label>
+          <input id="mMuslo" type="number" step="0.1" inputmode="decimal">
+        </div>
+        <div class="measure-field">
+          <label for="mBrazo">Brazo (cm)</label>
+          <input id="mBrazo" type="number" step="0.1" inputmode="decimal">
+        </div>
+      </div>
+
       <div class="measure-actions">
         <button id="cancelMeasureBtn" class="secondary" type="button">Cancelar</button>
         <button id="saveMeasureBtn" class="primary" type="button">Guardar medición</button>
@@ -245,8 +416,17 @@ function parseCSV(text){
 }
 function formatDate(v){
   if(!v)return'';
-  const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  return m?`${m[3]}/${m[2]}/${m[1]}`:v;
+  const s=String(v).trim();
+
+  // Acepta YYYY-MM-DD, ISO con hora o valores similares y muestra SOLO la fecha.
+  const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+
+  // Si viniera como fecha + hora en formato local, conserva únicamente la fecha.
+  const local=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(local) return `${local[1].padStart(2,'0')}/${local[2].padStart(2,'0')}/${local[3]}`;
+
+  return s.split(/[ T]/)[0];
 }
 
 const token=(new URLSearchParams(location.search).get('token')||'').trim();
@@ -496,7 +676,14 @@ function closeMeasurePanel(){
   measureEntry.classList.remove('show');
   setMeasureStatus('Podés completar todas o solo algunas medidas.');
 }
-document.getElementById('newMeasureBtn').addEventListener('click',()=>openMeasurePanel());
+document.getElementById('newMeasureBtn').addEventListener('click',()=>{
+  const isOpen=measureEntry.classList.contains('show');
+  if(isOpen){
+    closeMeasurePanel();
+  }else{
+    openMeasurePanel();
+  }
+});
 document.getElementById('cancelMeasureBtn').addEventListener('click',closeMeasurePanel);
 document.querySelectorAll('.measure-row .modify').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -529,7 +716,7 @@ function renderMeasurements(rows){
     const cells=row.children;
 
     currentEl.textContent=formatMetricValue(latest,key,units[key]);
-    currentEl.nextElementSibling.textContent=latest?formatDate(latest.fecha):'Sin medición actual';
+    currentEl.nextElementSibling.textContent=latest?'Última medición · '+formatDate(latest.fecha):'Sin medición actual';
 
     const latestN=latest?parseMeasureNumber(latest[key]):null;
     const prevN=previous?parseMeasureNumber(previous[key]):null;
@@ -542,7 +729,7 @@ function renderMeasurements(rows){
 
     const prevCell=cells[3];
     prevCell.firstElementChild.textContent=formatMetricValue(previous,key,units[key]);
-    prevCell.lastElementChild.textContent=previous?formatDate(previous.fecha):'Medición anterior';
+    prevCell.lastElementChild.textContent=previous?'Anterior · '+formatDate(previous.fecha):'Sin medición anterior';
   });
 }
 
