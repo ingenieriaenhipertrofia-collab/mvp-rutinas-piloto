@@ -33,7 +33,7 @@ h2{margin:4px 0 0;font-size:26px}
 .empty{padding:22px 14px;text-align:center;color:var(--muted);border:1px dashed #D9DDE2;border-radius:12px;background:#FAFBFC}
 .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .photo-slot{aspect-ratio:3/4;border:1px solid var(--line);border-radius:12px;background:#F4F5F7;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;overflow:hidden}
-.photo-slot img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-slot img{width:100%;height:100%;object-fit:contain;display:block;background:#F4F5F7}
 .compare-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
 select,input,textarea{border:1px solid #D7DCE2;border-radius:10px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}
 select{min-width:220px}
@@ -52,6 +52,11 @@ textarea{width:100%;min-height:120px;resize:vertical}
 .upload-panel.show{display:block}
 .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .upload-grid label{font-size:12px;font-weight:800;display:block;margin-bottom:6px}
+.photo-status{margin-top:10px;font-size:12px;font-weight:700;color:var(--muted)}
+.photo-status.ok{color:#287a45}
+.photo-status.error{color:#b3261e}
+.photo-date-label{margin:0 0 8px;font-size:12px;font-weight:800;color:var(--muted)}
+.photo-link{display:block;height:100%;width:100%}
 .file-input{width:100%}
 .status{font-size:13px;color:var(--muted)}
 @media(max-width:760px){
@@ -107,7 +112,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
         <button id="cancelUpload" class="secondary" type="button">Cancelar</button>
         <button id="saveUpload" class="primary" type="button" disabled>Guardar imágenes</button>
       </div>
-      <div class="notice">La interfaz de carga ya está preparada; el guardado en Drive se conectará al backend del piloto.</div>
+      <div id="photoStatus" class="photo-status">Elegí una fecha y una o más imágenes.</div>
     </div>
 
     <div id="currentPhotos" class="empty">Todavía no hay fotos cargadas para este alumno/a.</div>
@@ -194,6 +199,7 @@ textarea{width:100%;min-height:120px;resize:vertical}
 <script>
 const STUDENTS_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vTgXtqsbOnLeu3Ww4aVCXFYYzh-BzRZLtqv0J83Y-lxh6cSLCLcXKx4nhQ7HUG3OYYQJcaZUMeQUlFs/pub?gid=1888921254&single=true&output=csv';
 const NEW_STUDENTS_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vRgU_Tt5UfDCDGGZyqQhby-9g6Ik7BzwT3b63qUkivSllAQTeZG3CwZAwDEPOjHRRYa2Kc_AZi2o3_G/pub?gid=2126698701&single=true&output=csv';
+const FICHA_PHOTOS_API_URL='https://script.google.com/macros/s/AKfycby7qYzjQyoUnF-FXYtxotx8wIhYA40cc0aZVwxy0A4G5RaqXpEs4i7Mft1A6E1RBkIgbw/exec';
 
 function normalizeHeader(h){
   return String(h||'').replace(/^\uFEFF/,'').trim().toLowerCase()
@@ -232,10 +238,219 @@ document.getElementById('backBtn').addEventListener('click',()=>{
 });
 
 const uploadPanel=document.getElementById('uploadPanel');
+const photoDate=document.getElementById('photoDate');
+const photoFiles=document.getElementById('photoFiles');
+const saveUpload=document.getElementById('saveUpload');
+const photoStatus=document.getElementById('photoStatus');
+const currentPhotos=document.getElementById('currentPhotos');
+const compareSelect=document.getElementById('compareSelect');
+const comparePhotos=document.getElementById('comparePhotos');
+
+photoDate.value=new Date().toISOString().slice(0,10);
+
 document.getElementById('uploadToggle').addEventListener('click',()=>uploadPanel.classList.add('show'));
-document.getElementById('cancelUpload').addEventListener('click',()=>uploadPanel.classList.remove('show'));
-document.getElementById('photoFiles').addEventListener('change',e=>{
-  document.getElementById('saveUpload').disabled=!e.target.files.length;
+document.getElementById('cancelUpload').addEventListener('click',()=>{
+  uploadPanel.classList.remove('show');
+  photoStatus.textContent='Elegí una fecha y una o más imágenes.';
+  photoStatus.className='photo-status';
+});
+photoFiles.addEventListener('change',e=>{
+  saveUpload.disabled=!e.target.files.length;
+  if(e.target.files.length){
+    photoStatus.textContent=`${e.target.files.length} imagen${e.target.files.length===1?'':'es'} seleccionada${e.target.files.length===1?'':'s'}.`;
+  }
+});
+
+function setPhotoStatus(text,type=''){
+  photoStatus.textContent=text;
+  photoStatus.className='photo-status'+(type?' '+type:'');
+}
+
+function escapeHtml(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function compressPhoto(file,maxSide=1600,quality=.84){
+  // Se comprime en el celular/navegador para acelerar subida y apertura.
+  // Si el formato no puede procesarse, se usa el archivo original.
+  try{
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const r=new FileReader();
+      r.onload=()=>resolve(r.result);
+      r.onerror=reject;
+      r.readAsDataURL(file);
+    });
+
+    const img=await new Promise((resolve,reject)=>{
+      const i=new Image();
+      i.onload=()=>resolve(i);
+      i.onerror=reject;
+      i.src=dataUrl;
+    });
+
+    let w=img.naturalWidth||img.width;
+    let h=img.naturalHeight||img.height;
+    const scale=Math.min(1,maxSide/Math.max(w,h));
+    w=Math.max(1,Math.round(w*scale));
+    h=Math.max(1,Math.round(h*scale));
+
+    const canvas=document.createElement('canvas');
+    canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+    if(!blob) throw new Error('No se pudo comprimir');
+    return new File([blob],(file.name||'foto').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
+  }catch(e){
+    return file;
+  }
+}
+
+async function uploadOnePhoto(file,fecha,orden){
+  const compact=await compressPhoto(file);
+  const base64=await fileToBase64(compact);
+
+  const body=new URLSearchParams({
+    action:'uploadPhoto',
+    token:token,
+    fecha:fecha,
+    orden:String(orden),
+    filename:compact.name||file.name||`foto-${orden}.jpg`,
+    mime_type:compact.type||file.type||'image/jpeg',
+    data:base64
+  });
+
+  await fetch(FICHA_PHOTOS_API_URL,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:body.toString()
+  });
+}
+
+function groupPhotosByDate(rows){
+  const groups={};
+  (rows||[]).forEach(r=>{
+    const d=String(r.fecha||'').trim();
+    if(!d) return;
+    (groups[d]||(groups[d]=[])).push(r);
+  });
+  Object.values(groups).forEach(arr=>arr.sort((a,b)=>(Number(a.orden)||0)-(Number(b.orden)||0)));
+  return groups;
+}
+
+function renderPhotoSet(container,rows,loading='lazy'){
+  if(!rows||!rows.length){
+    container.className='empty';
+    container.innerHTML='Todavía no hay fotos cargadas para este alumno/a.';
+    return;
+  }
+
+  container.className='photo-grid';
+  container.innerHTML=rows.map((r,i)=>{
+    const src=r.thumb_url||r.view_url||'';
+    const full=r.view_url||r.thumb_url||src;
+    return `<div class="photo-slot">
+      <a class="photo-link" href="${escapeHtml(full)}" target="_blank" rel="noopener">
+        <img src="${escapeHtml(src)}" alt="Foto ${i+1}" loading="${loading}" decoding="async">
+      </a>
+    </div>`;
+  }).join('');
+}
+
+async function loadPhotoHistory(){
+  if(!token || !FICHA_PHOTOS_API_URL || FICHA_PHOTOS_API_URL.includes('__FICHA_')) return;
+
+  const sep=FICHA_PHOTOS_API_URL.includes('?')?'&':'?';
+  const res=await fetch(FICHA_PHOTOS_API_URL+sep+'action=listPhotos&token='+encodeURIComponent(token)+'&t='+Date.now(),{cache:'no-store'});
+  if(!res.ok) throw new Error('No se pudo consultar el historial fotográfico.');
+
+  const data=await res.json();
+  if(!data || data.ok!==true || !Array.isArray(data.rows)){
+    throw new Error(data&&data.error?data.error:'Respuesta inválida del backend.');
+  }
+
+  const groups=groupPhotosByDate(data.rows);
+  const dates=Object.keys(groups).sort().reverse();
+
+  if(!dates.length){
+    document.getElementById('currentPhotosTitle').textContent='Fotos actuales';
+    renderPhotoSet(currentPhotos,[]);
+    compareSelect.disabled=true;
+    compareSelect.innerHTML='<option value="">No hay controles anteriores</option>';
+    comparePhotos.innerHTML='';
+    return;
+  }
+
+  const latest=dates[0];
+  document.getElementById('currentPhotosTitle').textContent='Fotos actuales · '+formatDate(latest);
+  renderPhotoSet(currentPhotos,groups[latest],'eager');
+
+  const oldDates=dates.slice(1);
+  compareSelect.disabled=!oldDates.length;
+  compareSelect.innerHTML=oldDates.length
+    ? '<option value="">Elegir control anterior</option>'+oldDates.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(formatDate(d))}</option>`).join('')
+    : '<option value="">No hay controles anteriores</option>';
+
+  compareSelect.onchange=()=>{
+    const d=compareSelect.value;
+    comparePhotos.innerHTML='';
+    comparePhotos.className='';
+    if(!d) return;
+    comparePhotos.innerHTML=`<div class="photo-date-label">Control del ${escapeHtml(formatDate(d))}</div>`;
+    const grid=document.createElement('div');
+    comparePhotos.appendChild(grid);
+    renderPhotoSet(grid,groups[d],'lazy');
+  };
+}
+
+saveUpload.addEventListener('click',async()=>{
+  const files=[...photoFiles.files];
+  const fecha=photoDate.value;
+
+  if(!fecha){ setPhotoStatus('Elegí la fecha de las fotos.','error'); return; }
+  if(!files.length){ setPhotoStatus('Elegí al menos una imagen.','error'); return; }
+  if(!token){ setPhotoStatus('No hay un alumno/a identificado.','error'); return; }
+  if(!FICHA_PHOTOS_API_URL || FICHA_PHOTOS_API_URL.includes('__FICHA_')){
+    setPhotoStatus('Todavía falta conectar la URL del backend de fotos.','error');
+    return;
+  }
+
+  saveUpload.disabled=true;
+  photoFiles.disabled=true;
+  photoDate.disabled=true;
+
+  try{
+    for(let i=0;i<files.length;i++){
+      setPhotoStatus(`Guardando imagen ${i+1} de ${files.length}…`);
+      await uploadOnePhoto(files[i],fecha,i+1);
+    }
+
+    setPhotoStatus('Imágenes guardadas. Actualizando ficha…','ok');
+    await new Promise(r=>setTimeout(r,1200));
+    await loadPhotoHistory();
+
+    photoFiles.value='';
+    uploadPanel.classList.remove('show');
+    setPhotoStatus('Imágenes guardadas correctamente.','ok');
+  }catch(e){
+    console.error(e);
+    setPhotoStatus('No se pudieron guardar las imágenes.','error');
+  }finally{
+    photoFiles.disabled=false;
+    photoDate.disabled=false;
+    saveUpload.disabled=true;
+  }
 });
 
 (async()=>{
@@ -258,6 +473,7 @@ document.getElementById('photoFiles').addEventListener('change',e=>{
     if(student.objetivo_principal) bits.push('Objetivo: '+student.objetivo_principal);
     if(student.fecha_inicio) bits.push('Inicio: '+formatDate(student.fecha_inicio));
     document.getElementById('studentMeta').textContent=bits.join(' · ');
+    try{ await loadPhotoHistory(); }catch(photoErr){ console.warn('No se pudo cargar el historial fotográfico.',photoErr); }
   }catch(e){
     document.getElementById('studentName').textContent='No se pudo cargar la ficha';
     document.getElementById('studentMeta').textContent=e.message;
