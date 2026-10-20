@@ -445,6 +445,30 @@ function getTodayRecord(r){
     )
   );
 }
+function formatPreviousDate(value){
+  const raw=String(value||'').trim();
+  if(!raw) return '';
+  let year,month,day;
+  const iso=raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)/);
+  const latin=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?!\d)/);
+  if(iso){
+    [,year,month,day]=iso;
+  }else if(latin){
+    [,day,month,year]=latin;
+  }else{
+    const parsed=new Date(raw);
+    if(Number.isNaN(parsed.getTime())) return '';
+    year=parsed.getFullYear();
+    month=parsed.getMonth()+1;
+    day=parsed.getDate();
+  }
+  const date=new Date(Number(year),Number(month)-1,Number(day));
+  if(date.getFullYear()!==Number(year) || date.getMonth()!==Number(month)-1 || date.getDate()!==Number(day)) return '';
+  const weekdays=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${weekdays[date.getDay()]} ${date.getDate()}, ${months[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 function renderLast(r){
   const box=document.getElementById('lastBox');
   const rec=getLastRecord(r);
@@ -452,7 +476,7 @@ function renderLast(r){
   const vals=[rec.peso_s1,rec.peso_s2,rec.peso_s3].filter(v=>String(v).trim()!=='');
   if(!vals.length){ box.style.display='none'; return; }
   document.getElementById('lastValues').textContent=vals.join(' / ')+' kg';
-  document.getElementById('lastDate').textContent=rec.fecha ? 'Registro anterior: '+rec.fecha : '';
+  document.getElementById('lastDate').textContent=formatPreviousDate(rec.fecha) ? 'Registro anterior: '+formatPreviousDate(rec.fecha) : '';
   box.style.display='block';
 }
 
@@ -789,7 +813,7 @@ function makeComboCard(r,exIndex,rounds,vertical,exerciseCount){
     last.innerHTML=
       `<div class="combo-last-title">Último registro</div>`+
       `<div class="combo-last-values">${prev.values.length ? escapeHtml(prev.values.join(' / ')+' kg') : '—'}</div>`+
-      (prev.date?`<div class="combo-last-date">${escapeHtml(prev.date)}</div>`:'');
+      (formatPreviousDate(prev.date)?`<div class="combo-last-date">${escapeHtml(formatPreviousDate(prev.date))}</div>`:'');
 
     metaRow.append(pres,last);
     card.appendChild(metaRow);
@@ -823,7 +847,7 @@ function makeComboCard(r,exIndex,rounds,vertical,exerciseCount){
     last.innerHTML=
       `<div class="combo-last-title">Último registro</div>`+
       `<div class="combo-last-values">${prev.values.length ? escapeHtml(prev.values.join(' / ')+' kg') : '—'}</div>`+
-      (prev.date?`<div class="combo-last-date">${escapeHtml(prev.date)}</div>`:'');
+      (formatPreviousDate(prev.date)?`<div class="combo-last-date">${escapeHtml(formatPreviousDate(prev.date))}</div>`:'');
     card.appendChild(last);
   }
 
