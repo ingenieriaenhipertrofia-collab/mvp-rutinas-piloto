@@ -134,7 +134,7 @@ button.primary{border:0;background:var(--ink);color:#fff;border-radius:9px;paddi
 .combo-vertical-weightgrid{display:flex;gap:6px;margin-top:10px;flex-wrap:nowrap}
 .combo-vertical-weightgrid .combo-weight-row{margin-top:0;flex:1 1 0;min-width:0;gap:4px}
 .combo-vertical-weightgrid .combo-weight-row label{min-width:auto;font-size:10px}
-.combo-vertical-weightgrid .combo-weight{min-width:0;width:100%;padding:8px 4px;font-size:14px}
+.combo-vertical-weightgrid .combo-weight{min-width:0;width:100%;flex:1 1 0;padding:8px 4px;font-size:14px}
 .combo-vertical-weightgrid .combo-unit{display:none}
 .combo-note{margin:10px 0 12px;padding:11px 12px;border-radius:10px;background:#fff8e7;border:1px solid #ead8a0;border-left:4px solid var(--gold)}
 .combo-note-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#7a651d;margin-bottom:4px}
@@ -150,7 +150,8 @@ button.primary{border:0;background:var(--ink);color:#fff;border-radius:9px;paddi
   .combo-grid.cols-3 .combo-last-values{font-size:12px}
   .combo-grid.cols-3 .combo-weight-row{gap:4px}
   .combo-grid.cols-3 .combo-weight-row label{min-width:18px;font-size:10px}
-  .combo-grid.cols-3 .combo-weight{font-size:14px;padding:8px 5px}
+  .combo-grid.cols-3 .combo-weight{font-size:14px;padding:8px 5px;flex:1 1 0;min-width:0}
+  .combo-grid.cols-3 .combo-same{padding:6px 5px}
   .combo-grid.cols-3 .combo-unit{display:none}
 }
 
@@ -748,7 +749,7 @@ function escapeHtml(s){
   })[ch]);
 }
 
-function makeComboCard(r,exIndex,rounds,vertical){
+function makeComboCard(r,exIndex,rounds,vertical,exerciseCount){
   const card=document.createElement('div');
   card.className='combo-card'+(vertical?' vertical':'');
 
@@ -856,7 +857,11 @@ function makeComboCard(r,exIndex,rounds,vertical){
       const same=document.createElement('button');
       same.type='button';
       same.className='combo-same';
-      same.textContent='↺ mismo';
+      same.textContent=exerciseCount>=3?'↺':'↺ mismo';
+      if(exerciseCount>=3){
+        same.title='Mismo peso';
+        same.setAttribute('aria-label','Mismo peso');
+      }
 
       const previousInput=()=>weightBox.querySelector(`.combo-weight[data-ex-index="${exIndex}"][data-round="${i-1}"]`);
       const sync=()=>{
@@ -930,7 +935,7 @@ function renderCombined(item){
 
     const grid=document.createElement('div');
     grid.className=`combo-grid cols-${count}`;
-    item.rows.forEach((r,i)=>grid.appendChild(makeComboCard(r,i,rounds,false)));
+    item.rows.forEach((r,i)=>grid.appendChild(makeComboCard(r,i,rounds,false,count)));
     host.appendChild(grid);
 
     alignComboColumnTitles(grid);
@@ -949,7 +954,7 @@ function renderCombined(item){
 
     const grid=document.createElement('div');
     grid.className='combo-grid';
-    item.rows.forEach((r,i)=>grid.appendChild(makeComboCard(r,i,rounds,true)));
+    item.rows.forEach((r,i)=>grid.appendChild(makeComboCard(r,i,rounds,true,count)));
     host.appendChild(grid);
   }
 
