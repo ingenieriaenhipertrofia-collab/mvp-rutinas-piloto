@@ -624,7 +624,7 @@ html,body{
     <div id="routine"></div>
   </div>
   <div class="footer">Rutina actualizada por tu entrenador.</div>
-  <div class="pdf-actions">
+  <div class="pdf-actions" id="pdfActions" style="display:none">
     <button id="downloadPdfBtn" class="pdf-btn" type="button">Compartir / descargar PDF</button>
   </div>
 </div>
@@ -1140,8 +1140,12 @@ document.getElementById('downloadPdfBtn').addEventListener('click',downloadRouti
     const labels=buildDayLabels(parseCSV(namesText),token);
     loading.style.display='none';
     renderRoutine(rows,labels);
-    loadStudentNameOptional(token);
+    await loadStudentNameOptional(token);
+    const pdfActions=document.getElementById('pdfActions');
+    if(pdfActions) pdfActions.style.display='';
   }catch(e){
+    const pdfActions=document.getElementById('pdfActions');
+    if(pdfActions) pdfActions.style.display='none';
     loading.className='error';
     loading.textContent='No se pudo cargar la rutina: '+e.message;
   }
