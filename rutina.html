@@ -1065,7 +1065,21 @@ async function downloadRoutineAsSinglePagePdf(){
     const pdfBlob=pdf.output('blob');
     const pdfFile=new File([pdfBlob],fullFilename,{type:'application/pdf'});
 
+    // En celular/tablet intentamos compartir; en computadora descargamos
+    // directamente para evitar el panel de compartir del sistema operativo.
+    const isMobileOrTablet = (() => {
+      if(navigator.userAgentData && typeof navigator.userAgentData.mobile==='boolean'){
+        if(navigator.userAgentData.mobile) return true;
+      }
+      const ua=String(navigator.userAgent||'');
+      if(/Android|iPhone|iPod|iPad/i.test(ua)) return true;
+      // iPadOS puede identificarse como Macintosh.
+      if(/Macintosh/i.test(ua) && Number(navigator.maxTouchPoints||0)>1) return true;
+      return false;
+    })();
+
     const canShareFile =
+      isMobileOrTablet &&
       typeof navigator.share==='function' &&
       typeof navigator.canShare==='function' &&
       navigator.canShare({files:[pdfFile]});
