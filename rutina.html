@@ -625,7 +625,7 @@ html,body{
   </div>
   <div class="footer">Rutina actualizada por tu entrenador.</div>
   <div class="pdf-actions">
-    <button id="downloadPdfBtn" class="pdf-btn" type="button">Descargar como PDF</button>
+    <button id="downloadPdfBtn" class="pdf-btn" type="button">Compartir / descargar PDF</button>
   </div>
 </div>
 
@@ -1061,7 +1061,36 @@ async function downloadRoutineAsSinglePagePdf(){
       ? 'Rutina - '+student
       : 'Rutina');
 
-    pdf.save(filename+'.pdf');
+    const fullFilename=filename+'.pdf';
+    const pdfBlob=pdf.output('blob');
+    const pdfFile=new File([pdfBlob],fullFilename,{type:'application/pdf'});
+
+    const canShareFile =
+      typeof navigator.share==='function' &&
+      typeof navigator.canShare==='function' &&
+      navigator.canShare({files:[pdfFile]});
+
+    if(canShareFile){
+      try{
+        await navigator.share({
+          files:[pdfFile],
+          title:filename,
+          text:'Rutina de entrenamiento'
+        });
+      }catch(shareError){
+        // Si el usuario cierra la hoja de compartir, no forzamos ninguna descarga.
+        // Si compartir falla por otro motivo, conservamos la descarga tradicional
+        // como respaldo para no perder el PDF generado.
+        if(shareError?.name!=='AbortError'){
+          console.warn('No se pudo compartir el PDF; se descargará como respaldo.',shareError);
+          pdf.save(fullFilename);
+        }
+      }
+    }else{
+      // Navegadores o dispositivos sin Web Share API para archivos:
+      // se mantiene el comportamiento anterior de descarga directa.
+      pdf.save(fullFilename);
+    }
   }catch(e){
     console.error(e);
     alert('No se pudo generar el PDF. Probá nuevamente en unos segundos.');
