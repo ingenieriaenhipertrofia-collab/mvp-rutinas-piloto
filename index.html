@@ -734,11 +734,9 @@ function renderIndividual(r){
     label.textContent=`Serie ${i+1}`;
 
     const input=document.createElement('input');
-    input.type='number';
-    input.step='0.1';
-    input.inputMode='decimal';
     input.className='weight';
     input.value=savedWeights[i]||'';
+    configureWeightInput(input);
 
     const unit=document.createElement('span');
     unit.className='unit';
@@ -863,13 +861,11 @@ function makeComboCard(r,exIndex,rounds,vertical,exerciseCount){
     label.textContent=`V${i+1}`;
 
     const input=document.createElement('input');
-    input.type='number';
-    input.step='0.1';
-    input.inputMode='decimal';
     input.className='combo-weight';
     input.dataset.exIndex=String(exIndex);
     input.dataset.round=String(i);
     input.value=weights[i]||'';
+    configureWeightInput(input);
 
     const unit=document.createElement('span');
     unit.className='combo-unit';
@@ -881,11 +877,9 @@ function makeComboCard(r,exIndex,rounds,vertical,exerciseCount){
       const same=document.createElement('button');
       same.type='button';
       same.className='combo-same';
-      same.textContent=exerciseCount>=3?'↺':'↺ mismo';
-      if(exerciseCount>=3){
-        same.title='Mismo peso';
-        same.setAttribute('aria-label','Mismo peso');
-      }
+      same.textContent='↺';
+      same.title='Mismo peso';
+      same.setAttribute('aria-label','Mismo peso');
 
       const previousInput=()=>weightBox.querySelector(`.combo-weight[data-ex-index="${exIndex}"][data-round="${i-1}"]`);
       const sync=()=>{
@@ -1007,6 +1001,53 @@ function render(){
   document.getElementById('status').textContent='';
 }
 
+function cleanWeightInput(value){
+  const raw=String(value??'').replace(/\s+/g,'');
+  let out='';
+  let hasSeparator=false;
+
+  for(const ch of raw){
+    if(ch>='0' && ch<='9'){
+      out+=ch;
+      continue;
+    }
+
+    if(ch==='.' || ch===','){
+      if(!hasSeparator){
+        if(out==='') out='0';
+        out+=ch;
+        hasSeparator=true;
+      }else if(out.endsWith('.') || out.endsWith(',')){
+        continue;
+      }else{
+        break;
+      }
+    }
+  }
+
+  return out;
+}
+
+function normalizeWeightForSubmit(value){
+  let cleaned=cleanWeightInput(value);
+  if(!cleaned) return '';
+  cleaned=cleaned.replace(/[.,]$/,'');
+  return cleaned.replace('.',',');
+}
+
+function configureWeightInput(input){
+  input.type='text';
+  input.inputMode='decimal';
+  input.autocomplete='off';
+  input.spellcheck=false;
+  input.value=cleanWeightInput(input.value);
+
+  input.addEventListener('input',()=>{
+    const cleaned=cleanWeightInput(input.value);
+    if(input.value!==cleaned) input.value=cleaned;
+  });
+}
+
 function hasMeaningfulData(saved){
   const hasWeight=(saved.weights||[]).some(v=>String(v).trim()!=='');
   const hasComment=String(saved.comentario||'').trim()!=='';
@@ -1022,11 +1063,11 @@ async function postRecord(r,saved){
     'entry.637618348':r.dia||'',
     'entry.1070337401':r.ejercicio||'',
     'entry.1171632533':saved.comentario||'',
-    'entry.787420978':saved.weights?.[0]||'',
-    'entry.99988947':saved.weights?.[1]||'',
-    'entry.1031042020':saved.weights?.[2]||'',
-    'entry.2078932270':saved.weights?.[3]||'',
-    'entry.819204979':saved.weights?.[4]||''
+    'entry.787420978':normalizeWeightForSubmit(saved.weights?.[0]),
+    'entry.99988947':normalizeWeightForSubmit(saved.weights?.[1]),
+    'entry.1031042020':normalizeWeightForSubmit(saved.weights?.[2]),
+    'entry.2078932270':normalizeWeightForSubmit(saved.weights?.[3]),
+    'entry.819204979':normalizeWeightForSubmit(saved.weights?.[4])
   });
 
   await fetch(
