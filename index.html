@@ -371,6 +371,128 @@ function storageKey(){
   return `mvpRutinaState:v4:${localDateKey()}`;
 }
 
+const PENDING_QUEUE_KEY='mvpRutinaPendingPiloto:v1';
+
+function loadPendingQueue(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(PENDING_QUEUE_KEY)||'{}');
+    return parsed && typeof parsed==='object' && !Array.isArray(parsed) ? parsed : {};
+  }catch(e){
+    return {};
+  }
+}
+
+function savePendingQueue(queue){
+  localStorage.setItem(PENDING_QUEUE_KEY,JSON.stringify(queue||{}));
+}
+
+function pendingIdFor(r){
+  return `${r.token||''}|${r.dia||''}|${r.orden||''}|${r.ejercicio||''}`;
+}
+
+function makePendingRecord(r,saved){
+  return {
+    id:pendingIdFor(r),
+    token:String(r.token||''),
+    dia:String(r.dia||''),
+    nombre_dia_visible:dayTitle(r.dia),
+    ejercicio:String(r.ejercicio||''),
+    weights:Array.from({length:5},(_,i)=>String(saved.weights?.[i]??'')),
+    comentario:String(saved.comentario||'')
+  };
+}
+
+function putPendingRecord(record,ready){
+  const queue=loadPendingQueue();
+  const previous=queue[record.id];
+  const meaningful=(record.weights||[]).some(v=>String(v).trim()!=='') || String(record.comentario||'').trim()!=='';
+
+  if(!meaningful){
+    if(previous){
+      delete queue[record.id];
+      savePendingQueue(queue);
+    }
+    return false;
+  }
+
+  queue[record.id]={
+    ...record,
+    ready:Boolean(ready),
+    revision:Number(previous?.revision||0)+1,
+    updated_at:Date.now()
+  };
+  savePendingQueue(queue);
+  return true;
+}
+
+function promoteStoredDraftsToReady(){
+  const queue=loadPendingQueue();
+  let changed=false;
+  Object.values(queue).forEach(item=>{
+    if(item && !item.ready){
+      item.ready=true;
+      item.revision=Number(item.revision||0)+1;
+      item.updated_at=Date.now();
+      changed=true;
+    }
+  });
+  if(changed) savePendingQueue(queue);
+}
+
+function mergePendingIntoDailyState(token){
+  const queue=loadPendingQueue();
+  let changed=false;
+
+  allRows.forEach(r=>{
+    if(String(r.token||'').trim()!==String(token||'').trim()) return;
+    const pending=queue[pendingIdFor(r)];
+    if(!pending) return;
+
+    const key=keyFor(r);
+    const existing=state[key]||{weights:[],comentario:''};
+    const pendingWeights=Array.isArray(pending.weights)?pending.weights:[];
+    const hasPendingWeights=pendingWeights.some(v=>String(v).trim()!=='');
+    const hasExistingWeights=(existing.weights||[]).some(v=>String(v).trim()!=='');
+
+    if(!hasExistingWeights && hasPendingWeights){
+      existing.weights=pendingWeights.slice();
+      changed=true;
+    }
+
+    // En ejercicios simples el comentario vive en el estado del ejercicio.
+    if(!isCombinedRow(r) && !String(existing.comentario||'').trim() && String(pending.comentario||'').trim()){
+      existing.comentario=String(pending.comentario||'');
+      changed=true;
+    }
+    state[key]=existing;
+  });
+
+  // En bloques combinados, el comentario es compartido por toda la superserie.
+  // Reconstruimos también ese estado de bloque a partir de cualquier registro
+  // pendiente del bloque, para que vuelva a aparecer tras cerrar/reabrir.
+  const days=[...new Set(allRows.map(r=>String(r.dia||'').trim()).filter(Boolean))];
+  days.forEach(day=>{
+    const dayItems=buildItems(allRows.filter(r=>String(r.dia||'').trim()===day));
+    dayItems.forEach(item=>{
+      if(item.type!=='combined') return;
+      const pendingWithComment=item.rows
+        .map(r=>queue[pendingIdFor(r)])
+        .find(x=>x && String(x.comentario||'').trim());
+      if(!pendingWithComment) return;
+
+      const key=blockStateKey(item);
+      const existing=state[key]||{comentario:''};
+      if(!String(existing.comentario||'').trim()){
+        existing.comentario=String(pendingWithComment.comentario||'');
+        state[key]=existing;
+        changed=true;
+      }
+    });
+  });
+
+  if(changed) localStorage.setItem(storageKey(),JSON.stringify(state));
+}
+
 function stripBom(s){return s.replace(/^\uFEFF/,'')}
 function normalizeHeader(s){
   return stripBom(String(s)).trim().toLowerCase().normalize('NFD')
@@ -645,6 +767,43 @@ function saveCurrentSafe(){
   if(!items.length) return;
   if(document.getElementById('app').classList.contains('hidden')) return;
   saveCurrent();
+}
+
+function queueCurrentItem(ready=false){
+  if(!items.length) return 0;
+  if(document.getElementById('app').classList.contains('hidden')) return 0;
+
+  const item=items[current];
+  let queued=0;
+
+  if(item.type==='individual'){
+    const r=item.rows[0];
+    const saved=state[keyFor(r)]||{weights:[],comentario:''};
+    if(putPendingRecord(makePendingRecord(r,saved),ready)) queued++;
+    return queued;
+  }
+
+  const sharedComment=String((state[blockStateKey(item)]||{}).comentario||'');
+  item.rows.forEach(r=>{
+    const own=state[keyFor(r)]||{weights:[],comentario:''};
+    const saved={weights:own.weights||[],comentario:sharedComment};
+    if(putPendingRecord(makePendingRecord(r,saved),ready)) queued++;
+  });
+  return queued;
+}
+
+function persistCurrentDraft(){
+  if(!items.length) return;
+  if(document.getElementById('app').classList.contains('hidden')) return;
+  saveCurrent();
+  queueCurrentItem(false);
+}
+
+function finalizeCurrentForSync(){
+  if(!items.length) return 0;
+  if(document.getElementById('app').classList.contains('hidden')) return 0;
+  saveCurrent();
+  return queueCurrentItem(true);
 }
 
 function getPreviousWeights(r){
@@ -1045,6 +1204,7 @@ function configureWeightInput(input){
   input.addEventListener('input',()=>{
     const cleaned=cleanWeightInput(input.value);
     if(input.value!==cleaned) input.value=cleaned;
+    persistCurrentDraft();
   });
 }
 
@@ -1054,20 +1214,18 @@ function hasMeaningfulData(saved){
   return hasWeight||hasComment;
 }
 
-async function postRecord(r,saved){
-  if(!hasMeaningfulData(saved)) return false;
-
+async function postPendingRecord(record){
   const body=new URLSearchParams({
-    'entry.293607866':r.token||'',
-    'entry.603257664':dayTitle(r.dia),
-    'entry.637618348':r.dia||'',
-    'entry.1070337401':r.ejercicio||'',
-    'entry.1171632533':saved.comentario||'',
-    'entry.787420978':normalizeWeightForSubmit(saved.weights?.[0]),
-    'entry.99988947':normalizeWeightForSubmit(saved.weights?.[1]),
-    'entry.1031042020':normalizeWeightForSubmit(saved.weights?.[2]),
-    'entry.2078932270':normalizeWeightForSubmit(saved.weights?.[3]),
-    'entry.819204979':normalizeWeightForSubmit(saved.weights?.[4])
+    'entry.293607866':record.token||'',
+    'entry.603257664':record.nombre_dia_visible||'',
+    'entry.637618348':record.dia||'',
+    'entry.1070337401':record.ejercicio||'',
+    'entry.1171632533':record.comentario||'',
+    'entry.787420978':normalizeWeightForSubmit(record.weights?.[0]),
+    'entry.99988947':normalizeWeightForSubmit(record.weights?.[1]),
+    'entry.1031042020':normalizeWeightForSubmit(record.weights?.[2]),
+    'entry.2078932270':normalizeWeightForSubmit(record.weights?.[3]),
+    'entry.819204979':normalizeWeightForSubmit(record.weights?.[4])
   });
 
   await fetch(
@@ -1079,30 +1237,56 @@ async function postRecord(r,saved){
       body:body.toString()
     }
   );
-
-  return true;
 }
 
-async function sendCurrent(){
-  const item=items[current];
-  if(!item) return 0;
+let syncInProgress=false;
 
-  if(item.type==='individual'){
-    const r=item.rows[0];
-    const saved=state[keyFor(r)]||{weights:[],comentario:''};
-    return (await postRecord(r,saved))?1:0;
-  }
+async function syncPendingQueue(){
+  if(syncInProgress) return;
+  if(typeof navigator!=='undefined' && navigator.onLine===false) return;
 
-  const sharedComment=String((state[blockStateKey(item)]||{}).comentario||'');
-  let sent=0;
-  for(const r of item.rows){
-    const own=state[keyFor(r)]||{weights:[],comentario:''};
-    const saved={weights:own.weights||[],comentario:sharedComment};
-    if(await postRecord(r,saved)) sent++;
+  syncInProgress=true;
+  try{
+    const snapshot=loadPendingQueue();
+    const readyItems=Object.values(snapshot)
+      .filter(item=>item && item.ready)
+      .sort((a,b)=>Number(a.updated_at||0)-Number(b.updated_at||0));
+
+    for(const item of readyItems){
+      try{
+        const sentRevision=Number(item.revision||0);
+        await postPendingRecord(item);
+
+        const currentQueue=loadPendingQueue();
+        const current=currentQueue[item.id];
+
+        // Solo eliminamos si nada cambió localmente mientras se enviaba.
+        if(current && current.ready && Number(current.revision||0)===sentRevision){
+          delete currentQueue[item.id];
+          savePendingQueue(currentQueue);
+        }
+      }catch(e){
+        console.warn('Sincronización pendiente; se reintentará más adelante.',e);
+      }
+    }
+  }finally{
+    syncInProgress=false;
   }
-  return sent;
 }
 
+
+document.getElementById('comentario').addEventListener('input',persistCurrentDraft);
+document.getElementById('comboComment').addEventListener('input',persistCurrentDraft);
+
+window.addEventListener('online',()=>{ void syncPendingQueue(); });
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    persistCurrentDraft();
+  }else if(document.visibilityState==='visible'){
+    void syncPendingQueue();
+  }
+});
+window.addEventListener('beforeunload',persistCurrentDraft);
 
 document.getElementById('keysToggle').addEventListener('click',()=>{
   const content=document.getElementById('keysContent');
@@ -1113,22 +1297,15 @@ document.getElementById('keysToggle').addEventListener('click',()=>{
 });
 
 document.getElementById('prevBtn').addEventListener('click',()=>{
-  saveCurrent();
+  const queued=finalizeCurrentForSync();
+  void syncPendingQueue();
   if(current>0){current--;render()}
 });
 
-document.getElementById('nextBtn').addEventListener('click',async()=>{
-  saveCurrent();
-  let sent=0;
-  try{
-    sent=await sendCurrent();
-    document.getElementById('status').textContent=sent>0?'✓ Guardado':'Sin datos para guardar';
-  }catch(e){
-    console.error(e);
-    document.getElementById('status').textContent='No se pudo guardar';
-    alert(e.message||'No se pudo guardar el registro.');
-    return;
-  }
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  const queued=finalizeCurrentForSync();
+  document.getElementById('status').textContent=queued>0?'✓ Guardado':'Sin datos para guardar';
+  void syncPendingQueue();
 
   setTimeout(()=>{
     if(current<items.length-1){
@@ -1149,7 +1326,8 @@ document.getElementById('reviewBtn').addEventListener('click',()=>{
 });
 
 document.getElementById('backToDaysBtn').addEventListener('click',()=>{
-  saveCurrentSafe();
+  finalizeCurrentForSync();
+  void syncPendingQueue();
   showDaySelector();
 });
 
@@ -1207,6 +1385,7 @@ function refreshHistoryOnCurrentExercise(){
 (async()=>{
   try{
     loadStored();
+    promoteStoredDraftsToReady();
 
     const params=new URLSearchParams(window.location.search);
     const urlToken=(params.get('token')||'').trim();
@@ -1244,11 +1423,14 @@ function refreshHistoryOnCurrentExercise(){
 
     if(!allRows.length) throw new Error('No hay una rutina vigente para este token.');
 
+    mergePendingIntoDailyState(urlToken);
+
     document.getElementById('loading').classList.add('hidden');
     showDaySelector();
 
-    // Evita advertencias por promesas no observadas; no se espera para mostrar la app.
+    // Historial y sincronización se ejecutan en segundo plano; ninguno bloquea la app.
     void historyPromise;
+    void syncPendingQueue();
   }catch(e){
     document.getElementById('loading').textContent='Error al cargar la rutina: '+e.message;
   }
